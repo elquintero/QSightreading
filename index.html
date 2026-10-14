@@ -56,7 +56,7 @@ const BOTTOM_SOL = 2, BOTTOM_FA = -10;
 const PENDING = 12;
 const MAX_W   = 1100;
 // ---------- constantes nuevas ----------
-const APP_NAME = "ReadNotes Lectura", APP_VER = "0.1.4", SESSION_N = 32, CLEF_GAP = 0.55;
+const APP_NAME = "ReadNotes Lectura", APP_VER = "0.1.5", SESSION_N = 32, CLEF_GAP = 0.55;
 const DEV = /[?&]dev=1\b/.test(location.search);       // ?dev=1: permite probar sin piano (rueda y teclado en pantalla)
 const SHARED = "";   // sound/ y fonts/ están en la raíz del repositorio (en minúscula)
 const MODE_NAME = ["Clave de sol", "Clave de fa", "Claves mezcladas", "Armaduras clave de sol", "Armaduras clave de fa", "Melodías", "Lectura"];
@@ -162,7 +162,8 @@ accent: 0,
 klv: [0, 0],
 adapt: true,
 rec: 0,
-hand: 0                                         // cursos de lectura: 0 = las dos manos · 1 = solo derecha (sol) · 2 = solo izquierda (fa)
+hand: 0,
+pulse: 0                                         // cursos de lectura: 0 = las dos manos · 1 = solo derecha (sol) · 2 = solo izquierda (fa)
 };
 function loadSettings() {
 try {
@@ -189,6 +190,7 @@ S.midi = raw.midi !== false;
 S.adapt = raw.adapt !== false;
 S.rec    = Math.max(0, int(raw.rec, 0));
 S.hand   = clamp(int(raw.hand, 0), 0, 2);
+S.pulse  = PULSE_BPM.indexOf(int(raw.pulse, 0)) >= 0 ? int(raw.pulse, 0) : 0;
 } catch (e) {  }
 applyAccent();
 }
@@ -455,7 +457,9 @@ function buzz(pattern) {
 if (S.haptic && navigator.vibrate) { try { navigator.vibrate(pattern); } catch (e) {} }
 }
 let notes = [];
-let score = 0, streak = 0, okCount = 0, badCount = 0;
+let score = 0, streak = 0, okCount = 0, badCount = 0, missCount = 0;
+let pulse = null;                                   // metrónomo de Lectura: { P: ms por pulso, t0: instante del pulso de la 1.ª nota, sched: próximo clic a programar }
+const PULSE_BPM = [0, 40, 50, 60, 70, 80, 90, 100];     // 0 = apagado
 let lastKey = -999, plan = [], generated = 0, bestStreak = 0, results = [];
 let curShownAt = 0, curBad = 0, finishAt = 0, pauseStart = null, lastClef = 0;
 let scene = "menu", sceneHits = [], scrollY = 0, scrollV = 0, maxScroll = 0, drag = null;
@@ -580,7 +584,7 @@ function startSession(review, clefs) {
     for (let i = 0; i < SN(); i++) plan.push(c0);
   }
   generated = 0; notes = []; lastKey = -999;
-  score = streak = okCount = badCount = bestStreak = 0;
+  score = streak = okCount = badCount = bestStreak = missCount = 0;  pulse = null;
   results = []; msg = ""; msgT = 0; curBad = 0;
   let prev = null;
   for (let i = 0; i < Math.min(PENDING, SN()); i++) { const n = makeNote(prev); notes.push(n); prev = n; }
@@ -594,7 +598,7 @@ function startSession(review, clefs) {
 }
 function pauseBegin() { if (pauseStart === null) pauseStart = performance.now(); }
 function pauseEnd() {
-  if (pauseStart !== null) { curShownAt += performance.now() - pauseStart; pauseStart = null; }
+  if (pauseStart !== null) { const dp = performance.now() - pauseStart; curShownAt += dp; if (pulse) pulse.t0 += dp; pauseStart = null; }
 }
 let savedScroll = 0;
 function setSettings(v) {
@@ -645,6 +649,7 @@ function finishSession() {
   if (playMode === 5 && mel) { rec.mt = mel.title;  rec.mid = mel.id; }
   if (curKey) rec.k = curKey.lv;
   if (playMode === 6 && lecRun) rec.st = lecRun.stage.id;
+  if (pulse && playMode === 6) rec.pl = Math.round(60000 / pulse.P);
   let prev = null;
   for (let i = sessions.length - 1; i >= 0; i--) if (sessions[i].m === rec.m && !!sessions[i].rv === !!rec.rv && sessions[i].mid === rec.mid && sessions[i].st === rec.st) { prev = sessions[i]; break; }
   sessions.push(rec);
@@ -659,12 +664,70 @@ function finishSession() {
     sum.lv = { lv, pass, last, to: pass && !last ? lv + 1 : lv };
     if (pass && !last) { S.klv[c] = lv + 1;  saveSettings(); }
   }
+  if (pulse && playMode === 6) {                       // con pulso, una nota perdida cuenta como fallo completo (no como nota tocada)
+    const h = rec.n.filter((e) => e[6] !== 1).length;
+    sum.all.acc = h + sum.all.bad ? h / (h + sum.all.bad) : 0;
+  }
   if (playMode === 6 && lecRun) sum.lec = lecAfter(sum.all.acc);
   playStreak();
   buzz([25, 40, 25]);
   go("summary");
 }
 const currentNote = () => notes.find((n) => n.state === 0) || null;
+function advanceNotes(now) {                                       // tras tocar (o perder) una nota: el pentagrama avanza y se repone la cola
+  const nxt = notes.find((n) => n.state === 0);
+  const ln2 = notes.find((n) => n.last);                          // doble barra final ya visible -> el pentagrama se queda quieto
+  const stay = !!ln2 && L.curX + ln2.tslot * L.gap + L.gap * 0.72 <= L.x1 - L.gap * 0.3;
+  const shift = stay ? 0 : nxt ? nxt.tslot : 1;
+  for (const n of notes) n.tslot -= shift;
+  if (generated < SN()) {
+    const nn = makeNote(notes[notes.length - 1]);
+    nn.slot = nn.tslot + 1.5;
+    notes.push(nn);
+  }
+  if (okCount + missCount >= SN()) finishAt = now + 850;
+}
+/* ---------- metrónomo de Lectura: una nota por pulso; si no llegas a tiempo, la lectura sigue sin esperarte ---------- */
+function pulseInit() {
+  if (!S.pulse || playMode !== 6) { pulse = null;  return; }
+  const P = 60000 / S.pulse, now = performance.now();
+  pulse = { P, t0: now + 4 * P + 300, sched: -4, lastT: now };     // 4 pulsos de cuenta atrás y empieza la primera nota
+  msg = "Cuenta atrás: 4 pulsos · una nota por pulso";  msgOk = true;  msgT = 3;
+}
+function pulseMiss(c, now) {                                       // el pulso de esta nota ha pasado sin acierto: se da por perdida y se sigue leyendo
+  const row = [c.clef, c.step, curBad + (curBad ? 0 : 1), Math.round(pulse.P), c.iv === undefined ? null : c.iv, null, 1];
+  c.state = 2;  c.bad = row[2];  missCount++;  badCount++;  streak = 0;
+  results.push(row);
+  curBad = 0;  curShownAt = now;
+  advanceNotes(now);
+}
+function pulseTick(now) {
+  const pl = pulse;
+  if (!pl) return;
+  if (scene !== "game" || playMode !== 6 || settingsOpen || pauseStart !== null || finishAt) { pl.lastT = now;  return; }
+  if (now - pl.lastT > 800) pl.t0 += now - pl.lastT;                // la pestaña estuvo en segundo plano: el pulso no cuenta ese tiempo
+  pl.lastT = now;
+  while (pl.t0 + pl.sched * pl.P <= now + 140) {                    // los clics se programan por adelantado en el reloj de audio (sin desfase)
+    const at = pl.t0 + pl.sched * pl.P, acc = mod(pl.sched, 4) === 0;
+    tone(acc ? 1500 : 1000, 0.05, "square", acc ? 0.22 : 0.15, Math.max(0, (at - now) / 1000));
+    pl.sched++;
+  }
+  const c = currentNote();
+  if (c && now > pl.t0 + (okCount + missCount) * pl.P + pl.P * 0.5) pulseMiss(c, now);
+}
+function drawPulse() {
+  if (!pulse || settingsOpen || playMode !== 6) return;
+  const now = performance.now(), q = (now - pulse.t0) / pulse.P, b = Math.floor(q), ph = q - b, p = L.paper;
+  const r = clamp(L.sp * 0.3, 4, 8), x0 = p.x + 16 + r, y0 = L.msgY + L.msgH * 0.3;
+  for (let i = 0; i < 4; i++) {
+    const on = i === mod(b, 4), cx2 = x0 + i * r * 3.2;
+    ctx.globalAlpha = on ? 1 - ph * 0.45 : 0.35;
+    ctx.fillStyle = on ? (i === 0 ? AC.accT : AC.txt) : AC.dim;
+    ctx.beginPath();  ctx.arc(cx2, y0, on ? r * (1.3 - ph * 0.3) : r * 0.8, 0, Math.PI * 2);  ctx.fill();
+  }
+  ctx.globalAlpha = 1;
+  text(Math.round(60000 / pulse.P) + " ppm", x0 + 4 * r * 3.2, y0, 12, AC.dim, "left");
+}
 const nameOf = (i) => (S.es ? NAMES_ES[i] : NAMES_EN[i]);
 function submit(idx, kb) {
   if (scene !== "game" || settingsOpen) return;
@@ -674,6 +737,12 @@ function submit(idx, kb) {
   if (!c) return;
   audio();
   const now = performance.now();
+  let pOff = null;
+  if (pulse && playMode === 6) {                                    // con pulso: la nota vale dentro de su pulso (±media pulsación); antes de abrirse la ventana se espera
+    const due = pulse.t0 + (okCount + missCount) * pulse.P;
+    if (now < due - pulse.P * 0.5) { msg = "Espera el pulso";  msgOk = false;  msgT = 0.8;  return; }
+    pOff = Math.round(now - due);
+  }
   const ring = idx >= 10 ? 1 : 0, lt = idx >= 10 ? idx - 10 : idx;      // 10-16 = círculo interior (nota alterada por la armadura)
   const ok = kb ? kbOk(c, kb) : mod(c.step, 7) === lt && ((c.acc || 0) !== 0 ? ring === 1 : ring === 0);
   flashIdx = idx;  flashKey = kb ? kb.midi : -1;  flashT = 0.35;  flashOk = ok;
@@ -685,23 +754,14 @@ function submit(idx, kb) {
     if (streak > S.rec) { S.rec = streak; saveSettings(); }
     score += 10 + Math.min(streak, 10);
     { const row = [c.clef, c.step, curBad, Math.max(0, Math.round(now - curShownAt - (playMode === 5 ? melHoldMs : 0)))];
-      if (c.iv !== undefined && c.iv !== null) row.push(c.iv);          // 5.º dato: intervalo desde la nota anterior (curso de lectura)
+      if (pOff !== null) row.push(c.iv === undefined ? null : c.iv, pOff);       // con pulso: 5.º intervalo y 6.º desviación en ms (negativo = adelantado)
+      else if (c.iv !== undefined && c.iv !== null) row.push(c.iv);          // 5.º dato: intervalo desde la nota anterior (curso de lectura)
       results.push(row); }
     c.bad = curBad;
     curShownAt = now;  curBad = 0;
     if (playMode === 6) buzz(12);                                      // el piano ya suena solo: la app no repite la nota
     else if (playMode !== 5) { playNote(c.step, 0.5, c.acc || 0);  buzz(12); }
-    const nxt = notes.find((n) => n.state === 0);
-    const ln2 = notes.find((n) => n.last);                          // doble barra final ya visible -> el pentagrama se queda quieto
-    const stay = !!ln2 && L.curX + ln2.tslot * L.gap + L.gap * 0.72 <= L.x1 - L.gap * 0.3;
-    const shift = stay ? 0 : nxt ? nxt.tslot : 1;
-    for (const n of notes) n.tslot -= shift;
-    if (generated < SN()) {
-      const nn = makeNote(notes[notes.length - 1]);
-      nn.slot = nn.tslot + 1.5;
-      notes.push(nn);
-    }
-    if (okCount >= SN()) finishAt = now + 850;
+    advanceNotes(now);
   } else {
     badCount++;  curBad++;  streak = 0;
     c.shake = 1;
@@ -788,6 +848,7 @@ function act0(id) {
     case "lay_l": S.layoutL = S.layoutL === 1 ? 0 : 1;  layout(); break;
     case "oct_on":  S.octVerify = true;   layout(); break;
     case "oct_off": S.octVerify = false;  layout(); break;
+    case "pulse_n": S.pulse = PULSE_BPM[(PULSE_BPM.indexOf(S.pulse) + 1) % PULSE_BPM.length];  break;
     case "hand_n": S.hand = (S.hand + 1) % 3;  lecLoadProg();  lecConfirm = { id: "", t: 0 };  if (scene === "lecnivel" || scene === "lecficha" || scene === "dm" || scene === "dmres" || scene === "midichk") go("lec");  break;
     case "adapt_on":  S.adapt = true;  break;
     case "adapt_off": S.adapt = false; break;
@@ -807,7 +868,7 @@ function update(dt) {
     if (n.shake > 0) { n.shake = Math.max(0, n.shake - dt * 3); moving = true; }
   }
   for (let i = notes.length - 1; i >= 0; i--) {
-    if (notes[i].state === 1 && noteX(notes[i]) < L.leftLimit) notes.splice(i, 1);
+    if (notes[i].state !== 0 && noteX(notes[i]) < L.leftLimit) notes.splice(i, 1);
   }
   flashT = Math.max(0, flashT - dt);  msgT = Math.max(0, msgT - dt);
   if (Math.abs(scrollV) > 15 && !drag) {
@@ -823,6 +884,7 @@ function update(dt) {
       if (Math.abs(dd) > 0.004) { lnT[c] += dd * (1 - Math.exp(-16 * dt));  moving = true; } else lnT[c] = tg;
     }
   }
+  if (pulse && scene === "game" && playMode === 6) { pulseTick(performance.now());  if (!settingsOpen) moving = true; }
   return moving || was || flashT > 0 || msgT > 0;
 }
 let settingsOpen = false;
@@ -854,6 +916,8 @@ rows.push({ k: "step", label: "Objetivo diario", value: S.goal ? S.goal + " nota
 rows.push({ k: "hd", label: "Lectura a primera vista" });
 rows.push({ k: "tap", label: "Mano en los cursos", value: S.hand === 1 ? "Solo mano derecha · clave de sol" : S.hand === 2 ? "Solo mano izquierda · clave de fa" : "Las dos manos", id: "hand_n" });
 rows.push({ k: "note", tight: true, small: true, label: "El progreso de cada modo se guarda por separado" });
+rows.push({ k: "tap", label: "Metrónomo en Lectura", value: S.pulse ? S.pulse + " pulsos por minuto" : "Apagado", id: "pulse_n" });
+rows.push({ k: "note", tight: true, small: true, label: "Una nota por pulso: si no llegas a tiempo, la lectura sigue sin esperarte" });
 rows.push({ k: "hd", label: "Apariencia" });
 rows.push({ k: "tap", label: "Tema de la aplicación", value: S.skin === 1 ? "Oscuro" : "Claro", id: S.skin === 1 ? "skin_0" : "skin_1" });
 rows.push({ k: "colors", label: "Color de Acento" });
@@ -1284,6 +1348,11 @@ if (hold && hold.note === cur) {                    // melodías: la columna se 
   ctx.fillStyle = AC.light ? "rgba(0,0,0,.13)" : "rgba(255,255,255,.2)";
   ctx.fillRect(noteX(cur) - L.gap * 0.42, p.y + 6 + hh2 * (1 - f), L.gap * 0.84, hh2 * f);
 }
+if (pulse && playMode === 6) {                      // barra de tiempo: se llena durante el pulso de esta nota
+  const pr = clamp((performance.now() - (pulse.t0 + (okCount + missCount) * pulse.P - pulse.P * 0.5)) / pulse.P, 0, 1);
+  ctx.fillStyle = pr > 0.8 ? AC.fail : AC.accT;
+  ctx.fillRect(noteX(cur) - L.gap * 0.4, p.y, L.gap * 0.8 * pr, 4);
+}
 }
 for (const n of notes) {
 const x = noteX(n);
@@ -1291,7 +1360,8 @@ const alpha = clamp((x - L.leftLimit) / (1.6 * L.sp), 0, 1);
 if (alpha <= 0 || x > L.x1) continue;
 const NOTE = AC.light ? "#111111" : "#c2c2c2";
 let col = NOTE;
-if (n.state === 1) col = n.bad > 0 ? AC.fail : NOTE;
+if (n.state === 2) col = AC.fail;
+else if (n.state === 1) col = n.bad > 0 ? AC.fail : NOTE;
 else if (n === cur) { col = NOTE; if (flashT > 0 && !flashOk) col = C.bad; }
 const shake = Math.sin(performance.now() * 0.05) * 0.25 * L.sp * n.shake;
 ctx.globalAlpha = alpha;
@@ -1300,7 +1370,7 @@ const cb = bottomStep(n.clef);
 glyph(n.clef === 0 ? G_CLEF : F_CLEF, x - 2.7 * L.sp, stepY(cb + (n.clef === 0 ? 2 : 6), n.clef), col, 2.2 * L.sp);
 }
 drawNote(n.step, x + shake, col, n.clef, n.beats ? n : null);
-if (n.state === 1 && n.bad > 0) text(nameOf(mod(n.step, 7)), x, p.y + L.sp * 0.7, clamp(L.sp * 1.05, 11, 20), AC.fail, "center");
+if ((n.state === 1 && n.bad > 0) || n.state === 2) text(nameOf(mod(n.step, 7)), x, p.y + L.sp * 0.7, clamp(L.sp * 1.05, 11, 20), AC.fail, "center");
 ctx.globalAlpha = 1;
 }
 const ln = notes.find((n) => n.last);
@@ -1534,6 +1604,7 @@ function go(s) {
   if (scene === "dm" && s !== "dm") dmLeave();
   const d0 = depth(), changed = s !== scene;
   if (changed) startTrans(-1);
+  if (s !== "game") pulse = null;
   scene = s;  sceneHits = [];  scrollY = 0;  scrollV = 0;  maxScroll = 0;  drag = null;  finishAt = 0;
   if (changed && trans) trans.dir = depth() >= d0 ? 1 : -1;
   dirty = true;
@@ -1696,7 +1767,7 @@ function startMelody(song) {
   pianoPreload(song.notes.map((n) => midi(n.step) + (n.alt || 0)));
   plan = song.notes.map(() => 0);
   generated = 0;  notes = [];  lastKey = -999;
-  score = streak = okCount = badCount = bestStreak = 0;
+  score = streak = okCount = badCount = bestStreak = missCount = 0;  pulse = null;
   results = [];  msg = "";  msgT = 0;  curBad = 0;  hold = null;
   let prev = null;
   for (let i = 0; i < Math.min(PENDING, song.notes.length); i++) { const n = makeNote(prev); notes.push(n); prev = n; }
@@ -2506,6 +2577,13 @@ function drawSummary() {
     ["Mejor racha", String(r.r), "aciertos seguidos", AC.dim],
     ["Puntos", String(r.s), "", AC.dim]
   ];
+  if (r.pl) {                                                        // sesión con metrónomo: continuidad y desviación respecto al pulso
+    const pm = r.n.filter((e) => e[6] === 1).length, offs = r.n.filter((e) => typeof e[5] === "number").map((e) => e[5]);
+    const mo = offs.length ? offs.reduce((a, b) => a + b, 0) / offs.length : 0;
+    cards[1] = ["Continuidad", (A.n - pm) + " de " + A.n, "notas a tiempo", pm === 0 ? AC.ok : AC.dim];
+    cards[2] = ["Desviación media", (mo >= 0 ? "+" : "") + Math.round(mo) + " ms", Math.abs(mo) < 25 ? "justo en el pulso" : mo > 0 ? "vas retrasado" : "vas adelantado", AC.dim];
+    cards[5] = ["Puntos", String(r.s), r.pl + " ppm", AC.dim];
+  }
   cards.forEach((c, i) => statCard(x + (i % 2) * (cw + gap), y + Math.floor(i / 2) * (ch + gap), cw, ch, c[0], c[1], c[2], c[3]));
   y += 3 * ch + 2 * gap + pad;
   // por clave
@@ -2998,7 +3076,7 @@ function lecIntervalStats(id) {                        // fallos por intervalo e
     const s = sessions[i];
     if (s.st !== id) continue;
     cnt++;
-    for (const e of s.n) { if (e[4] === undefined) continue; const o = stats[e[4]] || (stats[e[4]] = { n: 0, bad: 0 }); o.n++;  if (e[2] > 0) o.bad++; }
+    for (const e of s.n) { if (e[4] === undefined || e[4] === null) continue; const o = stats[e[4]] || (stats[e[4]] = { n: 0, bad: 0 }); o.n++;  if (e[2] > 0) o.bad++; }
   }
   return stats;
 }
@@ -3016,7 +3094,7 @@ function lecStart(id) {
   layout();
   plan = seq.map((n) => n.clef);
   generated = 0;  notes = [];  lastKey = -999;
-  score = streak = okCount = badCount = bestStreak = 0;
+  score = streak = okCount = badCount = bestStreak = missCount = 0;  pulse = null;
   results = [];  msg = "";  msgT = 0;  curBad = 0;  hold = null;
   let prev = null;
   for (let i = 0; i < Math.min(PENDING, seq.length); i++) { const n = makeNote(prev); notes.push(n); prev = n; }
@@ -3025,6 +3103,7 @@ function lecStart(id) {
   pauseStart = settingsOpen ? curShownAt : null;
   go("game");
   msg = st.consejo || "Toca las notas con el piano";  msgOk = true;  msgT = 4;
+  pulseInit();
 }
 function lecAfter(acc, stage) {                        // al terminar: progreso y desbloqueo
   const st = stage || lecRun.stage, id = st.id, need = (st.pasa && st.pasa.sesiones) || 2, thr = (st.pasa && st.pasa.precision) || 0.9;
@@ -3707,6 +3786,7 @@ drawHeaderDark();
 drawStaff();
 drawNotes();
 drawMessage();
+drawPulse();
 drawMicHint();
 if (L.kb) drawKeyboard(); else if (L.foot) drawLecFoot(); else drawWheel();
 } else {
