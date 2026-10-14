@@ -56,7 +56,7 @@ const BOTTOM_SOL = 2, BOTTOM_FA = -10;
 const PENDING = 12;
 const MAX_W   = 1100;
 // ---------- constantes nuevas ----------
-const APP_NAME = "ReadNotes Lectura", APP_VER = "0.1.1", SESSION_N = 32, CLEF_GAP = 0.55;
+const APP_NAME = "ReadNotes Lectura", APP_VER = "0.1.2", SESSION_N = 32, CLEF_GAP = 0.55;
 const DEV = /[?&]dev=1\b/.test(location.search);       // ?dev=1: permite probar sin piano (rueda y teclado en pantalla)
 const SHARED = "../";                                    // carpeta de la app hermana con Sound/ y fonts/ (cámbiala si la app va en otro sitio)
 const MODE_NAME = ["Clave de sol", "Clave de fa", "Claves mezcladas", "Armaduras clave de sol", "Armaduras clave de fa", "Melodías", "Lectura"];
@@ -1009,7 +1009,7 @@ function setupSW() {
 }
 addEventListener("load", setupSW);
 function drawUpdateBanner() {
-  if (!updReady || updDismissed || scene === "game" || settingsOpen) return;
+  if (!updReady || updDismissed || scene === "game" || scene === "dm" || settingsOpen) return;
   const w = Math.min(L.cw - L.m * 2, 560), x = L.cx0 + (L.cw - w) / 2;
   const h = clamp(L.vh * 0.07, 44, 54), y = L.top + L.barH + L.m;
   const cw2 = h * 0.8, bw = clamp(w * 0.3, 92, 130), bx = x + w - cw2 - bw - 2, by = y + 7, bh = h - 14;
@@ -1025,22 +1025,22 @@ function drawUpdateBanner() {
 }
 // Pantalla encendida mientras dura la partida (Wake Lock)
 async function wakeOn() {
-  if (!("wakeLock" in navigator) || wakeLock || wakeBusy || document.hidden || scene !== "game") return;
+  if (!("wakeLock" in navigator) || wakeLock || wakeBusy || document.hidden || !(scene === "game" || scene === "dm")) return;
   wakeBusy = true;
   try {
     const l = await navigator.wakeLock.request("screen");
-    if (scene === "game") { wakeLock = l; l.addEventListener("release", () => { if (wakeLock === l) wakeLock = null; }); }
+    if (scene === "game" || scene === "dm") { wakeLock = l; l.addEventListener("release", () => { if (wakeLock === l) wakeLock = null; }); }
     else l.release();
   } catch (e) {}
   wakeBusy = false;
 }
 function wakeOff() { const l = wakeLock; wakeLock = null; if (l) { try { l.release(); } catch (e) {} } }
-const wakeSync = () => (scene === "game" ? wakeOn() : wakeOff());
+const wakeSync = () => (scene === "game" || scene === "dm" ? wakeOn() : wakeOff());
 document.addEventListener("visibilitychange", () => { if (!document.hidden) wakeSync(); });
 addEventListener("keyup", () => { if (scene === "game" && playMode === 5) melRelease(); });   // el sistema lo libera al ocultar la app
 // Botón/gesto "atrás" del móvil: una entrada de historial por nivel de pantalla.
 // Niveles: menú 0 · claves/estadísticas 1 · partida/resumen 2 · ajustes suma 1.
-const depth0 = () => (scene === "menu" ? 0 : scene === "lec" ? 1 : scene === "lecnivel" || scene === "midichk" ? 2 : scene === "lecficha" ? 3 : (scene === "game" || scene === "summary") && playMode === 6 ? 4 : scene === "melodies" ? (melInCat() ? 3 : 2) : scene === "game" || scene === "summary" ? (playMode === 5 ? (melInCat() ? 4 : 3) : 2) : 1) + (settingsOpen ? 1 : 0);
+const depth0 = () => (scene === "menu" ? 0 : scene === "lec" ? 1 : scene === "lecnivel" || scene === "midichk" ? 2 : scene === "lecficha" ? 3 : scene === "dm" || scene === "dmres" ? 4 : (scene === "game" || scene === "summary") && playMode === 6 ? 4 : scene === "melodies" ? (melInCat() ? 3 : 2) : scene === "game" || scene === "summary" ? (playMode === 5 ? (melInCat() ? 4 : 3) : 2) : 1) + (settingsOpen ? 1 : 0);
 const depth = () => depth0() + (scene === "melodies" && melBusy >= 0 ? 1 : 0);   // al abrir una canción, el nivel nuevo se anota al pulsar (con gesto del usuario), no al acabar de cargar
 let histD = 0, popLock = false, popPending = false;
 try {
@@ -1116,6 +1116,7 @@ function onMidi(e) {
 const [st, note, vel] = e.data;
 if (st >= 0xF0) return;                              // reloj (0xF8), sensor activo (0xFE) y sistema: se descartan antes de nada
 if (scene === "midichk" && (st & 0xF0) === 0x90 && vel > 0) { lecChkNote(note);  return; }
+if (scene === "dm" && !settingsOpen && (st & 0xF0) === 0x90 && vel > 0) { dmNote(note, e.timeStamp);  return; }      // dos manos: la jugada se evalúa por columnas
 if ((st & 0xF0) === 0x90 && vel > 0) { midiLast = midiName(note);  dirty = true; }          // última nota recibida (se ve en Ajustes)
 if (S.midi && scene === "game" && playMode === 5 && ((st & 0xF0) === 0x80 || ((st & 0xF0) === 0x90 && vel === 0))) { melRelease(); return; }
 if (!S.midi || settingsOpen || scene !== "game" || (st & 0xF0) !== 0x90 || vel === 0) return;
@@ -1500,6 +1501,7 @@ function drawSettings() {
 /* ===================== PANTALLAS NUEVAS ===================== */
 function addHit(id, x, y, w, h) { sceneHits.push({ id, x, y, w, h, hidden: true, text: "", active: false }); }
 function go(s) {
+  if (scene === "dm" && s !== "dm") dmLeave();
   const d0 = depth(), changed = s !== scene;
   if (changed) startTrans(-1);
   scene = s;  sceneHits = [];  scrollY = 0;  scrollV = 0;  maxScroll = 0;  drag = null;  finishAt = 0;
@@ -2864,7 +2866,7 @@ const LecGen = (() => {
 
 /* ===================== LECTURA A PRIMERA VISTA (cursos) ===================== */
 const LEC_DIR = "cursos/";
-const LEC_SCENES = ["lec", "lecnivel", "lecficha", "midichk"];
+const LEC_SCENES = ["lec", "lecnivel", "lecficha", "midichk", "dmres"];
 const LEC_KEY = "rnl_prog";
 let lec = { state: "idle", err: "", index: null, courses: {} };
 let lecProg = {}, lecOpen = {}, lecRun = null, lecFb = null, lecDisc = false, lecConfirm = { id: "", t: 0 };
@@ -2903,14 +2905,31 @@ function lecOrderA() {                                 // etapas de la vía A en
   }
   return out;
 }
-const lecFind = (id) => lecOrderA().find((x) => x.stage.id === id) || null;
+function lecOrderAll() {                               // vía A y vía B, cada una en su orden
+  const out = [];
+  if (!lec.index) return out;
+  for (const via of ["A", "B"]) for (const c of lec.index.cursos) {
+    if (c.via !== via) continue;
+    const crs = lec.courses[c.id];
+    if (crs) for (const e of crs.etapas) out.push({ course: crs, stage: lecStageFull(crs, e) });
+  }
+  return out;
+}
+const lecFind = (id) => lecOrderAll().find((x) => x.stage.id === id) || null;
+const lecViaB = () => (lec.index && lec.index.vias && lec.index.vias.find((v) => v.id === "B")) || null;
+const lecFirstB = () => (lec.index && lec.index.cursos.find((c) => c.via === "B")) || null;
 const lecDone = (id) => !!(lecProg[id] && lecProg[id].done);
 function lecUnlocked(i, order) {
+  const c0 = order[i].course.curso, fb = lecFirstB();
+  if (fb && c0.id === fb.id && order[i].stage.orden === 1) {       // la vía B se abre al superar la etapa que indica index.json (sr1.5)
+    const vb = lecViaB(), need = (vb && vb.desbloqueo && vb.desbloqueo.etapa) || "sr1.5";
+    return lecDone(need) || !!lecOpen[c0.id];
+  }
   if (i === 0 || lecDone(order[i - 1].stage.id)) return true;
   const cid = order[i].course.curso.id;                 // "abrir de todos modos": se abre la primera etapa del nivel
   return order.findIndex((x) => x.course.curso.id === cid) === i && !!lecOpen[cid];
 }
-const lecCourseLocked = (cid) => { const o = lecOrderA(), i = o.findIndex((x) => x.course.curso.id === cid); return i < 0 ? true : !lecUnlocked(i, o); };
+const lecCourseLocked = (cid) => { const o = lecOrderAll(), i = o.findIndex((x) => x.course.curso.id === cid); return i < 0 ? true : !lecUnlocked(i, o); };
 const lecClefs = () => (!lecRun ? [0] : lecRun.stage.clave === "sol" ? [0] : lecRun.stage.clave === "fa" ? [1] : [0, 1]);
 const lecLabel = (id) => { const f = lec.state === "ok" ? lecFind(id) : null; return f ? id + " · " + f.stage.titulo : id; };
 
@@ -2947,6 +2966,7 @@ function lecStart(id) {
   if (!lecMidiOk()) { go("midichk");  return; }
   if (!S.midi) { S.midi = true;  saveSettings(); }
   initMidi();
+  if (f.stage.modo === "dosManos") { dmStart(f);  return; }
   const st = f.stage, seq = LecGen.generate(st, { dist: LecGen.adaptDist(st, lecIntervalStats(id)) });
   lecRun = { stage: st, course: f.course, title: st.id + " · " + st.titulo, notes: seq };
   lecSel = { course: f.course.curso.id, stage: id };
@@ -2964,14 +2984,15 @@ function lecStart(id) {
   go("game");
   msg = st.consejo || "Toca las notas con el piano";  msgOk = true;  msgT = 4;
 }
-function lecAfter(acc) {                               // al terminar: progreso y desbloqueo
-  const st = lecRun.stage, id = st.id, need = (st.pasa && st.pasa.sesiones) || 2, thr = (st.pasa && st.pasa.precision) || 0.9;
+function lecAfter(acc, stage) {                        // al terminar: progreso y desbloqueo
+  const st = stage || lecRun.stage, id = st.id, need = (st.pasa && st.pasa.sesiones) || 2, thr = (st.pasa && st.pasa.precision) || 0.9;
   const p = lecProg[id] || { best: 0, n: 0, streak: 0, done: false }, was = p.done, pass = acc >= thr;
   p.n++;  p.best = Math.max(p.best, acc);  p.streak = pass ? p.streak + 1 : 0;  p.t = Date.now();
   if (p.streak >= need) p.done = true;
   lecProg[id] = p;  lecSaveProg();
-  const order = lecOrderA(), i = order.findIndex((x) => x.stage.id === id), nx = order[i + 1];
-  return { id, pass, need, thr, streak: p.streak, done: p.done, newlyDone: p.done && !was, next: nx ? nx.stage : null, best: p.best };
+  const order = lecOrderAll(), i = order.findIndex((x) => x.stage.id === id), nx = order[i + 1];
+  const sameVia = nx && order[i].course.curso.via === nx.course.curso.via;      // la siguiente etapa no cruza de una vía a otra
+  return { id, pass, need, thr, streak: p.streak, done: p.done, newlyDone: p.done && !was, next: sameVia ? nx.stage : null, best: p.best };
 }
 
 /* ---------- acciones ---------- */
@@ -2991,7 +3012,7 @@ function lecAct(id) {
   }
   if (id.indexOf("lc_") === 0) {
     const cid = id.slice(3), c = lec.index && lec.index.cursos.find((x) => x.id === cid);
-    if (c && c.via === "A") { lecSel.course = cid;  go("lecnivel"); }
+    if (c) { lecSel.course = cid;  go("lecnivel"); }
     return true;
   }
   if (id.indexOf("ls_") === 0) {
@@ -3006,11 +3027,16 @@ function lecAct(id) {
     dirty = true;  return true;
   }
   if (id === "lec_start") { lecStart(lecSel.stage);  return true; }
+  if (id === "dm_rot") { dmLock();  return true; }
+  if (id === "dm_reset" || id === "dmres_again") { const f = dm && lecFind(dm.stage.id); if (f) dmStart(f);  return true; }
+  if (id === "dmres_next") { const nx = dm && dm.res && dm.res.next; if (nx) { lecSel.stage = nx.id;  lecStart(nx.id); }  return true; }
+  if (id === "dmres_menu") { go("lecnivel");  return true; }
   if (id === "back") {
     if (scene === "lec") go("menu");
     else if (scene === "lecnivel" || scene === "midichk") go("lec");
     else if (scene === "lecficha") go("lecnivel");
     else if ((scene === "game" || scene === "summary") && playMode === 6) go("lecnivel");
+    else if (scene === "dm" || scene === "dmres") go("lecnivel");
     else return false;
     return true;
   }
@@ -3045,16 +3071,16 @@ function lecStageState(i, order) {
 }
 function lecCourseRow(x, y, w, c, top) {
   const h = clamp(L.vh * 0.115, 72, 92), crs = lec.courses[c.id], A = c.via === "A";
-  const locked = A ? lecCourseLocked(c.id) : true, done = crs ? crs.etapas.filter((e) => lecDone(e.id)).length : 0, n = c.etapas;
-  const id = "lc_" + c.id, hov = A && hoverBtn === id;
+  const locked = lecCourseLocked(c.id), done = crs ? crs.etapas.filter((e) => lecDone(e.id)).length : 0, n = c.etapas;
+  const id = "lc_" + c.id, hov = hoverBtn === id;
   ctx.fillStyle = hov ? accA(AC.light ? 0.16 : 0.28) : AC.card;  rr(x, y, w, h, 12);  ctx.fill();
   ctx.strokeStyle = hov ? AC.accV : AC.edge;  ctx.lineWidth = hov ? 1.5 : 1;  ctx.stroke();
-  const col = A && !locked ? AC.txt : AC.dim;
+  const col = !locked ? AC.txt : AC.dim;
   text(c.etiqueta + " · " + c.titulo, x + 16, y + h * 0.3, clamp(h * 0.22, 14, 19), col, "left", "bold", w - 140);
   text(c.subtitulo, x + 16, y + h * 0.56, clamp(h * 0.17, 11, 14), AC.dim, "left", "", w - 140);
-  const right = !A ? "En preparación" : locked ? "Bloqueado" : done + " / " + n;
-  text(right, x + w - 16, y + h * 0.3, clamp(h * 0.18, 12, 15), A && !locked ? (done === n ? AC.ok : AC.accT) : AC.dim, "right", "bold", 120);
-  if (A) {
+  const right = locked ? "Bloqueado" : done + " / " + n;
+  text(right, x + w - 16, y + h * 0.3, clamp(h * 0.18, 12, 15), !locked ? (done === n ? AC.ok : AC.accT) : AC.dim, "right", "bold", 120);
+  {
     const bx = x + 16, bw = w - 32, by = y + h * 0.8;
     ctx.fillStyle = AC.trough;  rr(bx, by, bw, 6, 3);  ctx.fill();
     if (done) { ctx.fillStyle = done === n ? AC.ok : AC.accV;  rr(bx, by, Math.max(6, bw * done / n), 6, 3);  ctx.fill(); }
@@ -3104,10 +3130,11 @@ function drawLecNivel() {
   clipRect(0, top, L.vw, L.vh - top);
   let y = top + L.m + 8 - scrollY;
   y = lecPara(crs.curso.descripcion, x + 4, y, w - 8, fs, AC.dim) + 10;
-  const order = lecOrderA();
+  const order = lecOrderAll();
   if (lecCourseLocked(lecSel.course)) {
     const bh = 48, sure = lecConfirm.id === "lec_open" && performance.now() - lecConfirm.t < 3500;
-    text("Este nivel se abre al superar el anterior.", x + 4, y + 8, fs, AC.mid, "left", "bold", w);
+    const fb = lecFirstB(), vb = lecViaB();
+    text(fb && vb && lecSel.course === fb.id && vb.desbloqueo ? vb.desbloqueo.texto : "Este nivel se abre al superar el anterior.", x + 4, y + 8, fs, AC.mid, "left", "bold", w);
     y += 26;
     actionBtn(x, y, w, bh, sure ? "Toca otra vez para confirmar" : "Abrir de todos modos", sure, hoverBtn === "lec_open");
     visHit("lec_open", x, y, w, bh, top);
@@ -3147,8 +3174,9 @@ function drawLecFicha() {
   const p = lecProg[st.id], need = (st.pasa && st.pasa.sesiones) || 2, thr = Math.round(((st.pasa && st.pasa.precision) || 0.9) * 100);
   sec("QUÉ CAMBIA", st.cambia || "");
   sec("QUÉ TRABAJAS", st.foco || "");
+  if (st.modo === "dosManos") sec("CÓMO SE JUEGA", "Tocas con las dos manos a la vez, nota contra nota. Cada columna cuenta como acierto si suenan exactamente sus dos notas con menos de " + ((st.sincronia && st.sincronia.ventanaMs) || 120) + " ms entre ellas. Se juega en horizontal: la app girará la pantalla.");
   sec("CONSEJO", st.consejo || "");
-  sec("NOTAS", Object.keys(st.notaMin || {}).map((k) => (k === "sol" ? "Clave de Sol" : "Clave de Fa") + ": " + st.notaMin[k] + " a " + st.notaMax[k]).join(" · ") + " · dificultad " + st.indiceDificultad);
+  sec("NOTAS", Object.keys(st.notaMin || {}).map((k) => ({ sol: "Clave de Sol", fa: "Clave de Fa", derecha: "Mano derecha", izquierda: "Mano izquierda" }[k] || k) + ": " + st.notaMin[k] + " a " + st.notaMax[k]).join(" · ") + " · dificultad " + st.indiceDificultad);
   sec("PARA SUPERARLA", "Al menos " + thr + " % de aciertos en " + need + " sesiones seguidas.");
   sec("TU PROGRESO", p ? (p.done ? "Etapa superada. " : "") + "Mejor: " + Math.round(p.best * 100) + " % · sesiones seguidas válidas: " + p.streak + " de " + need : "Aún no has jugado esta etapa.", p && p.done ? AC.ok : AC.txt);
   maxScroll = Math.max(0, y + scrollY - viewBot);
@@ -3205,12 +3233,324 @@ function drawLecFoot() {                               // pie de la partida: est
     ls.forEach((ln, i) => text(ln, r.x + r.w / 2, r.y + r.h - 14 - (ls.length - 1 - i) * (fs + 1), fs - 2, AC.dim, "center"));
   }
 }
+/* ===================== VÍA B · DOS MANOS (columnas nota contra nota) ===================== */
+let bravOk = false;
+function dmFont() {                                    // el @font-face está al final del documento: se pide la fuente cuando la página ya cargó
+  try { document.fonts.load("40px Bravura", "\uE050\uE062\uE1D5\uE1D6").then((fs) => { bravOk = !!(fs && fs.length); dirty = true; }, () => {}); } catch (e) {}
+}
+addEventListener("load", dmFont);
+
+/* DOS-GEN:START ===== generador de columnas de dos manos (sin DOM: se prueba en Node) ===== */
+const DosGen = (() => {
+  const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+  const wts = (o) => Object.entries(o || {}).map(([k, v]) => [+k, +v]).filter((e) => e[1] > 0);
+  function pick(items, rng) {
+    let t = 0; for (const it of items) t += it[1];
+    if (t <= 0) return 0;
+    let r = rng() * t;
+    for (const it of items) { r -= it[1]; if (r < 0) return it[0]; }
+    return items[items.length - 1][0];
+  }
+  // Ventana de posición: fija = todo el registro de la mano; móvil = "anchura" notas que cambian de sitio cada "cadaNotas" columnas
+  function newWin(reg, pos, rng) {
+    const w = { reg, pos, starts: pos.inicios && pos.inicios.length ? pos.inicios : [reg.min], lo: reg.min, hi: reg.max, n: 0, k: -1 };
+    setWin(w, rng); return w;
+  }
+  function setWin(w, rng) {
+    if (w.pos.tipo === "movil") {
+      let k; do { k = Math.floor(rng() * w.starts.length); } while (w.starts.length > 1 && k === w.k);
+      w.k = k; const s0 = w.starts[k];
+      w.lo = Math.max(w.reg.min, s0); w.hi = Math.min(w.reg.max, s0 + w.pos.anchura - 1);
+    } else { w.lo = w.reg.min; w.hi = w.reg.max; }
+    w.n = 0;
+  }
+  function tick(w, rng) { w.n++; if (w.pos.tipo === "movil" && w.pos.cadaNotas && w.n >= w.pos.cadaNotas) setWin(w, rng); }
+  const newSt = () => ({ dir: 0, run: 0, same: 1 });
+  function updSt(st, m, s) {
+    if (!m) { st.same++; st.dir = 0; st.run = 0; }
+    else { st.same = 1; if (s === st.dir) st.run++; else { st.dir = s; st.run = 1; } }
+  }
+  // Una mano: o una nota fija, o una ventana con pesos de intervalo
+  function mkHand(d, rng) {
+    if (d.fija != null) return { fixed: d.fija, prev: d.fija };
+    const win = newWin(d.registro, d.posicion, rng), W = wts(d.intervalos);
+    const anc = (d.anclas || []).filter((a) => a >= win.lo && a <= win.hi);
+    return { win, W, st: newSt(), prev: anc.length ? anc[Math.floor(rng() * anc.length)] : win.lo };
+  }
+  function generate(stage, rng) {
+    rng = rng || Math.random;
+    const n = stage.longitud || 32, rel = stage.relacion, maxDir = stage.maxMismaDireccion || 0, maxRep = stage.maxRepeticiones || 0;
+    const R = mkHand(stage.derecha, rng), L = mkHand(stage.izquierda, rng);
+    const out = [{ der: R.prev, izq: L.prev }];
+    const okHand = (H, m, s, strict) => {
+      if (H.fixed != null) return m === 0;
+      const v = H.prev + s * m;
+      if (v < H.win.lo || v > H.win.hi) return false;
+      if (strict) {
+        if (m === 0 && maxRep && H.st.same >= maxRep) return false;
+        if (m > 0 && maxDir && s === H.st.dir && H.st.run >= maxDir) return false;
+      }
+      return true;
+    };
+    const apply = (H, m, s) => { if (H.fixed != null) return; H.prev += s * m; updSt(H.st, m, s); };
+    // Intervalos que caben (con algún sentido válido). Se elige entre ellos según su peso: así las cuotas del JSON se respetan
+    // aunque cerca de los bordes de la ventana algún intervalo no quepa en uno de los sentidos.
+    const cand = (H, strict, only) => {
+      if (H.fixed != null) return [{ m: 0, w: 1, signs: [0] }];
+      const c = [];
+      for (const [m, w] of H.W) {
+        const signs = (m === 0 ? [0] : (only || [1, -1])).filter((s) => okHand(H, m, s, strict));
+        if (signs.length) c.push({ m, w, signs });
+      }
+      return c;
+    };
+    const choose = (c) => { const m = pick(c.map((x) => [x, x.w]), rng); return m; };
+    for (let k = 1; k < n; k++) {
+      if (R.win) tick(R.win, rng);
+      if (L.win) tick(L.win, rng);
+      let done = false;
+      for (let t = 0; t < 80 && !done; t++) {
+        const strict = t < 50, cR = cand(R, strict);
+        if (!cR.length) continue;
+        const eR = choose(cR), sR = eR.signs[Math.floor(rng() * eR.signs.length)];
+        const only = eR.m > 0 && rel === "paralelo" ? [sR] : eR.m > 0 && rel === "contrario" ? [-sR] : null;   // paralelo: mismo sentido · contrario: opuesto
+        const cL = cand(L, strict, only);
+        if (!cL.length) continue;
+        const eL = choose(cL), sL = eL.signs[Math.floor(rng() * eL.signs.length)];
+        apply(R, eR.m, sR);  apply(L, eL.m, sL);  done = true;
+      }
+      if (!done) { apply(R, 0, 0);  apply(L, 0, 0); }                               // las dos manos repiten: cumple cualquier relación
+      out.push({ der: R.prev, izq: L.prev });
+    }
+    return out;
+  }
+  return { generate };
+})();
+/* DOS-GEN:END */
+
+// Evalúa una columna: la nota más grave se asigna a la izquierda y la más aguda a la derecha (el curso no cruza manos)
+function dmEvalColumna(exp, tocadas, ventana) {
+  const r = { ok: false, spread: 0, mano: {} };
+  const t = tocadas.slice().sort((a, b) => a.nota - b.nota);
+  if (tocadas.length) { const ts = tocadas.map((x) => x.t); r.spread = Math.max(...ts) - Math.min(...ts); }
+  let izq = null, der = null;
+  if (t.length >= 2) { izq = t[0]; der = t[t.length - 1]; }
+  else if (t.length === 1) { const n = t[0]; if (Math.abs(n.nota - exp.izquierda) <= Math.abs(n.nota - exp.derecha)) izq = n; else der = n; }
+  r.mano.izquierda = { esperada: exp.izquierda, tocada: izq ? izq.nota : null, ok: !!izq && izq.nota === exp.izquierda };
+  r.mano.derecha = { esperada: exp.derecha, tocada: der ? der.nota : null, ok: !!der && der.nota === exp.derecha };
+  r.ok = r.mano.izquierda.ok && r.mano.derecha.ok && t.length === 2 && r.spread <= ventana;
+  return r;
+}
+
+/* ---------- partida ---------- */
+let dm = null;
+function dmStart(f) {
+  const st = f.stage, cols = DosGen.generate(st);
+  dm = {
+    stage: st, course: f.course, cols, n: cols.length, i: 0, fails: 0, failedThis: false, firstTry: 0, times: [],
+    hand: { derecha: 0, izquierda: 0 }, handFail: { derecha: false, izquierda: false }, fb: null, buf: [], timer: 0, t0: -1e9, lastT0: -1e9,
+    tShow: performance.now(), pausedSince: 0, win: (st.sincronia && st.sincronia.ventanaMs) || 120, done: false, res: null, enteredFs: !isFs(),
+  };
+  dm.exp = cols.map((c) => ({ derecha: midi(c.der), izquierda: midi(c.izq) }));
+  lecSel = { course: f.course.curso.id, stage: st.id };
+  if (!bravOk) dmFont();
+  dmLock();                                            // se llama dentro del toque del usuario: Chrome lo exige para girar la pantalla
+  go("dm");
+}
+function dmLock() {
+  const lock = () => { try { screen.orientation.lock("landscape").then(onResize, onResize); } catch (e) {} };
+  try {
+    if (!isFs() && fsSupported()) { const el = document.documentElement, r = (el.requestFullscreen || el.webkitRequestFullscreen).call(el); if (r && r.then) r.then(lock, lock); else lock(); }
+    else lock();
+  } catch (e) { lock(); }
+}
+function dmLeave() {
+  if (!dm) return;
+  clearTimeout(dm.timer);  dm.buf = [];
+  try { screen.orientation.unlock(); } catch (e) {}
+  try { if (dm.enteredFs && isFs()) (document.exitFullscreen || document.webkitExitFullscreen).call(document); } catch (e) {}
+}
+const dmBlocked = () => !dm || dm.done || !lecMidiOk() || L.vw < L.vh;       // sin piano o en vertical: la partida espera
+
+function dmNote(note, ts) {
+  const d = dm;
+  if (!d || d.done || dmBlocked()) return;
+  const t = ts || performance.now();
+  if (t - d.lastT0 <= d.win) return;                   // tercera nota dentro de la misma jugada: se ignora
+  if (!d.buf.length) { d.t0 = t; d.timer = setTimeout(dmEval, d.win + 20); }
+  d.buf.push({ nota: note, t });
+  if (d.buf.length >= 2) { clearTimeout(d.timer); dmEval(); }
+}
+function dmEval() {
+  const d = dm;
+  if (!d || d.done) return;
+  const buf = d.buf;  d.buf = [];  d.lastT0 = d.t0;
+  if (!buf.length) return;
+  const exp = d.exp[d.i], r = dmEvalColumna(exp, buf, d.win), now = performance.now();
+  dirty = true;
+  if (r.ok) {
+    if (!d.failedThis) d.firstTry++;
+    for (const h of ["derecha", "izquierda"]) if (!d.handFail[h]) d.hand[h]++;
+    const tt = buf[buf.length - 1].t;
+    d.times.push(Math.max(0, tt - d.tShow));  d.tShow = tt;
+    d.fb = { ok: true, exp, at: now };
+    d.i++;  d.failedThis = false;  d.handFail = { derecha: false, izquierda: false };
+    if (d.i >= d.n) dmFinish();
+  } else {
+    if (!d.failedThis) { d.fails++;  d.failedThis = true; }
+    for (const h of ["derecha", "izquierda"]) if (!r.mano[h].ok) d.handFail[h] = true;
+    d.fb = { ok: false, r, partial: buf.length < 2, at: now };
+  }
+}
+function dmFinish() {
+  const d = dm;  d.done = true;  clearTimeout(d.timer);
+  const acc = d.firstTry / d.n, a = lecAfter(acc, d.stage);
+  const p = lecProg[d.stage.id];
+  if (p) { p.hand = { derecha: d.hand.derecha / d.n, izquierda: d.hand.izquierda / d.n }; lecSaveProg(); }
+  const s = d.times.slice().sort((x, y) => x - y), n = s.length;
+  const ms = n ? (n % 2 ? s[(n - 1) / 2] : (s[n / 2 - 1] + s[n / 2]) / 2) : 0;
+  d.res = Object.assign({ acc, n: d.n, fails: d.fails, ms, hand: { derecha: d.hand.derecha / d.n, izquierda: d.hand.izquierda / d.n } }, a);
+  go("dmres");
+}
+
+/* ---------- dibujo ---------- */
+function dmLayout() {
+  const m = L.m, top = L.top + L.barH, statH = 22, stTop = top + 8;
+  const feedH = clamp(L.vh * 0.22, 54, 110);
+  const aTop = stTop + statH + 4, aBot = L.bot - feedH - m;
+  const sp = clamp(Math.floor((aBot - aTop) / 19), 7, 22);
+  const x0 = L.cx0 + m, x1 = L.cx0 + L.cw - m, leftPad = 4.6 * sp;
+  const cols = clamp(Math.floor((x1 - x0 - leftPad) / (4.2 * sp)), 4, 12);
+  const colW = (x1 - x0 - leftPad) / cols;
+  const y0 = aTop + Math.max(0, ((aBot - aTop) - 19 * sp) / 2);
+  return { m, top, stTop, statH, feedH, feedY: L.bot - feedH - m * 0.5, aTop, aBot, sp, x0, x1, leftPad, cols, colW, y0, ySol: y0 + 7 * sp, yFa: y0 + 16 * sp };
+}
+const dmY = (g, step, clef) => (clef === "sol" ? g.ySol - (step - BOTTOM_SOL) * g.sp / 2 : g.yFa - (step - BOTTOM_FA) * g.sp / 2);
+function dmNoteAt(g, step, clef, x, col) {
+  const sp = g.sp, b = clef === "sol" ? BOTTOM_SOL : BOTTOM_FA, lw = Math.max(1.2, sp * 0.1), lc = AC.light ? "#2b2b2b" : "#9a9a9a";
+  for (let s2 = b - 2; s2 >= step; s2 -= 2) { const ly = dmY(g, s2, clef); line(x - sp, ly, x + sp, ly, lc, lw); }
+  for (let s2 = b + 10; s2 <= step; s2 += 2) { const ly = dmY(g, s2, clef); line(x - sp, ly, x + sp, ly, lc, lw); }
+  const y = dmY(g, step, clef), up = step < b + 4;
+  if (bravOk) { glyph(up ? QUARTER_UP : QUARTER_DOWN, x - sp * 0.59, y, col, 4 * sp); return; }
+  ctx.save();  ctx.fillStyle = col;  ctx.strokeStyle = col;  ctx.lineWidth = Math.max(1.4, sp * 0.12);      // sin Bravura: cabeza elíptica y plica
+  ctx.beginPath();  ctx.ellipse(x, y, sp * 0.62, sp * 0.46, -0.35, 0, 7);  ctx.fill();
+  ctx.beginPath();
+  if (up) { ctx.moveTo(x + sp * 0.58, y - sp * 0.1);  ctx.lineTo(x + sp * 0.58, y - sp * 3.2); } else { ctx.moveTo(x - sp * 0.58, y + sp * 0.1);  ctx.lineTo(x - sp * 0.58, y + sp * 3.2); }
+  ctx.stroke();  ctx.restore();
+}
+function dmTrack(d, blocked, now) {                    // el tiempo de pausa (piano desconectado o móvil en vertical) no cuenta como tiempo de lectura
+  if (blocked && !d.pausedSince) { d.pausedSince = now;  clearTimeout(d.timer);  d.buf = []; }
+  else if (!blocked && d.pausedSince) { d.tShow += now - d.pausedSince;  d.pausedSince = 0; }
+}
+function drawDM() {
+  ctx.fillStyle = AC.bg;  ctx.fillRect(0, 0, L.vw, L.vh);
+  const d = dm;
+  drawBar(d ? d.stage.id.replace(/^[a-z]+/, "") + " · " + d.stage.titulo : "Dos manos", { back: "back", actions: [{ id: "dm_reset", icon: "reset" }, { id: "open", icon: "gear" }] });
+  if (!d) return;
+  const g = dmLayout(), sp = g.sp, now = performance.now(), disc = !lecMidiOk(), portrait = L.vw < L.vh;
+  dmTrack(d, disc || portrait, now);
+  // progreso y marcador, como en la partida de una línea
+  const live = d.i + (d.failedThis ? 1 : 0), acc = live ? d.firstTry / live : 1;
+  const stat = "Columna " + Math.min(d.i + 1, d.n) + "/" + d.n + " | Fallos: " + d.fails + " | Precisión: " + Math.round(acc * 100) + "%";
+  ctx.font = "13px system-ui,sans-serif";
+  const tw = ctx.measureText(stat).width, by = g.stTop + (g.statH - 12) / 2;
+  ctx.fillStyle = AC.trough;  rr(g.x0, by, g.x1 - g.x0 - tw - 14, 12, 3);  ctx.fill();
+  if (d.i > 0) { ctx.fillStyle = AC.light ? AC.accV : "#e6e6e6";  rr(g.x0, by, Math.max(6, (g.x1 - g.x0 - tw - 14) * d.i / d.n), 12, 3);  ctx.fill(); }
+  text(stat, g.x1, g.stTop + g.statH / 2, 13, AC.dim, "right");
+  // pentagramas: las columnas de las dos manos comparten la misma x
+  const ink = AC.light ? "#2b2b2b" : "#8a8a8a", cc = AC.light ? "#111111" : "#bdbdbd", lw = Math.max(1.2, sp * 0.07);
+  for (const cl of ["sol", "fa"]) {
+    const b = cl === "sol" ? BOTTOM_SOL : BOTTOM_FA;
+    for (let k = 0; k < 5; k++) { const y = dmY(g, b + 2 * k, cl); line(g.x0 + 0.3 * sp, y, g.x1, y, ink, lw); }
+  }
+  line(g.x0 + 0.3 * sp, dmY(g, BOTTOM_SOL + 8, "sol"), g.x0 + 0.3 * sp, dmY(g, BOTTOM_FA, "fa"), ink, lw * 1.4);
+  if (bravOk) {
+    glyph(G_CLEF, g.x0 + 0.75 * sp, dmY(g, BOTTOM_SOL + 2, "sol"), cc, 4 * sp);
+    glyph(F_CLEF, g.x0 + 0.75 * sp, dmY(g, BOTTOM_FA + 6, "fa"), cc, 4 * sp);
+  } else { text("Sol", g.x0 + 0.75 * sp, dmY(g, BOTTOM_SOL + 2, "sol"), sp * 1.2, cc, "left", "bold");  text("Fa", g.x0 + 0.75 * sp, dmY(g, BOTTOM_FA + 6, "fa"), sp * 1.2, cc, "left", "bold"); }
+  const sys = Math.floor(Math.min(d.i, d.n - 1) / g.cols), c0 = sys * g.cols, c1 = Math.min(d.n, c0 + g.cols);
+  const xs = (k) => g.x0 + g.leftPad + (k - c0 + 0.5) * g.colW;
+  if (d.i < d.n) {                                     // un solo recuadro cruza las dos pautas: "estas dos notas, juntas"
+    const x = xs(d.i), yt = g.y0 + 1.4 * sp, yb = g.y0 + 17.6 * sp;
+    ctx.fillStyle = AC.light ? "rgba(0,0,0,.07)" : "rgba(255,255,255,.12)";  rr(x - g.colW * 0.42, yt, g.colW * 0.84, yb - yt, 10);  ctx.fill();
+  }
+  const base = AC.light ? "#2b2b2b" : "#bdbdbd", curC = AC.light ? "#000000" : "#ffffff";
+  for (let k = c0; k < c1; k++) {
+    const x = xs(k), col0 = k < d.i ? AC.ok : k === d.i ? curC : base;
+    const cR = k === d.i && d.handFail.derecha ? AC.bad : col0, cL = k === d.i && d.handFail.izquierda ? AC.bad : col0;
+    dmNoteAt(g, d.cols[k].der, "sol", x, cR);
+    dmNoteAt(g, d.cols[k].izq, "fa", x, cL);
+  }
+  // pie: estado del piano y qué mano falló, qué tocaste y qué era
+  const fx = g.x0, fy = g.feedY, fw = g.x1 - g.x0, fh = g.feedH, fs = clamp(fh * 0.2, 12, 17);
+  panel(fx, fy, fw, fh);
+  const ins = lecInputs(), ok = lecMidiOk();
+  ctx.fillStyle = ok ? AC.ok : AC.bad;  ctx.beginPath();  ctx.arc(fx + 16, fy + 16, 5, 0, Math.PI * 2);  ctx.fill();
+  text(ok ? (ins.length ? ins[0].name || "teclado" : "modo de prueba") : "Teclado desconectado", fx + 28, fy + 16, fs - 3, AC.dim, "left", "", fw * 0.5);
+  const cy = fy + fh * 0.62;
+  if (disc) text("Teclado desconectado · partida en pausa", fx + fw / 2, fy + fh * 0.55, fs + 4, AC.bad, "center", "bold", fw - 24);
+  else if (d.fb && !d.fb.ok) {
+    const r = d.fb.r;
+    if (d.fb.partial) text("Toca las dos notas a la vez", fx + fw / 2, fy + 16, fs - 1, AC.mid, "center", "bold", fw * 0.4);
+    [["izquierda", "Mano izquierda", 0.25], ["derecha", "Mano derecha", 0.75]].forEach(([h, lab, px]) => {
+      const m = r.mano[h], cx = fx + fw * px, hw = fw * 0.46;
+      text(lab, cx, fy + fh * 0.36, fs - 2, AC.dim, "center", "", hw);
+      if (m.ok) text("✓ " + midiName(m.esperada), cx, cy, fs + 4, AC.ok, "center", "bold", hw);
+      else if (m.tocada == null) text("Falta la nota", cx, cy, fs + 2, AC.bad, "center", "bold", hw);
+      else text("Tocaste " + midiName(m.tocada) + " · era " + midiName(m.esperada), cx, cy, fs + 2, AC.bad, "center", "bold", hw);
+    });
+  } else if (d.fb && d.fb.ok && now - d.fb.at < 1500) {
+    text("✓ " + midiName(d.fb.exp.izquierda) + "  +  " + midiName(d.fb.exp.derecha), fx + fw / 2, fy + fh * 0.55, fs + 6, AC.ok, "center", "bold", fw - 24);
+    if (now - d.fb.at < 1480) setTimeout(() => { dirty = true; }, 1500 - (now - d.fb.at) + 20);
+  } else text("Toca con las dos manos las dos notas de la columna, a la vez", fx + fw / 2, fy + fh * 0.55, fs + 1, AC.dim, "center", "", fw - 24);
+  if (portrait) {                                      // las dos manos solo se juegan en horizontal
+    const bw = Math.min(L.cw - L.m * 4, 320), bh = 52, bx = L.cx0 + (L.cw - bw) / 2, byy = L.vh * 0.58;
+    addHit("dm_rot", bx, byy, bw, bh);
+    addHit("noop", 0, g.top, L.vw, L.vh - g.top);
+    ctx.fillStyle = AC.bg;  ctx.fillRect(0, g.top, L.vw, L.vh - g.top);
+    text("Gira el móvil", L.vw / 2, L.vh * 0.38, 26, AC.txt, "center", "bold", L.vw - 32);
+    text("Las dos manos se juegan en horizontal.", L.vw / 2, L.vh * 0.46, 15, AC.dim, "center", "", L.vw - 32);
+    actionBtn(bx, byy, bw, bh, "Bloquear horizontal", true, hoverBtn === "dm_rot");
+  }
+}
+
+/* ---------- resultado ---------- */
+function drawDmRes() {
+  const d = dm, r = d && d.res;
+  drawBar("Resultado", { back: "back" });
+  if (!r) return;
+  const top = L.top + L.barH, w = Math.min(L.cw - L.m * 4, 520), x = L.cx0 + (L.cw - w) / 2, fs = clamp(L.vh * 0.021, 12, 16);
+  clipRect(0, top, L.vw, L.vh - top);
+  let y = top + L.m + 8 - scrollY;
+  text(d.stage.id.replace(/^[a-z]+/, "") + " · " + d.stage.titulo, x + 4, y + 8, fs + 1, AC.accT, "left", "bold", w);  y += 30;
+  text(Math.round(r.acc * 100) + " %", x + 4, y + 22, clamp(L.vh * 0.1, 34, 52), r.pass ? AC.ok : AC.mid, "left", "bold");  y += 56;
+  const msg = r.done ? (r.newlyDone ? "¡Etapa superada!" : "Etapa ya superada.")
+    : r.pass ? "Buena sesión: llevas " + r.streak + " de " + r.need + " seguidas con al menos " + Math.round(r.thr * 100) + " %."
+    : "Hace falta al menos " + Math.round(r.thr * 100) + " % para sumar sesión. Inténtalo de nuevo.";
+  y = lecPara(msg, x + 4, y, w - 8, fs + 1, r.done ? AC.ok : AC.txt) + 6;
+  const ch = clamp(L.vh * 0.11, 58, 74), cw2 = (w - 10) / 2, pc = (v) => Math.round(v * 100) + " %";
+  statCard(x, y, cw2, ch, "Mano derecha", pc(r.hand.derecha), "columnas a la primera", AC.dim, r.hand.derecha >= r.hand.izquierda ? AC.ok : AC.txt);
+  statCard(x + cw2 + 10, y, cw2, ch, "Mano izquierda", pc(r.hand.izquierda), "columnas a la primera", AC.dim, r.hand.izquierda > r.hand.derecha ? AC.ok : AC.txt);
+  y += ch + 10;
+  statCard(x, y, cw2, ch, "Fallos", String(r.fails), "en " + r.n + " columnas");
+  statCard(x + cw2 + 10, y, cw2, ch, "Tiempo mediano", (r.ms / 1000).toFixed(1).replace(".", ",") + " s", "por columna");
+  y += ch + 16;
+  const bh = clamp(L.vh * 0.075, 48, 58), btn = (id, label, primary) => { actionBtn(x, y, w, bh, label, primary, hoverBtn === id);  visHit(id, x, y, w, bh, top);  y += bh + 10; };
+  btn("dmres_again", "Repetir", !(r.done && r.next));
+  if (r.done && r.next) btn("dmres_next", "Siguiente etapa · " + r.next.id.replace(/^[a-z]+/, ""), true);
+  btn("dmres_menu", "Volver al nivel", false);
+  maxScroll = Math.max(0, y + scrollY - L.vh + L.m * 2);
+  if (scrollY > maxScroll) { scrollY = maxScroll;  dirty = true; }
+  ctx.restore();
+}
+
 lecLoadProg();
 
 function draw(t) {
 ctx.setTransform(L.dpr, 0, 0, L.dpr, 0, 0);
 sceneHits = [];
 if (settingsOpen) { drawSettings(); return; }
+if (scene === "dm") { drawDM(); return; }
 if (scene === "game") {
 ctx.fillStyle = AC.bg;  ctx.fillRect(0, 0, L.vw, L.vh);
 drawBar(reviewOn ? "Repasar fallos" : playMode === 6 && lecRun ? lecRun.title : playMode === 5 && mel ? mel.title : MODE_NAME[playMode], { back: "back", actions: [{ id: "reset", icon: "reset" }, { id: "open", icon: "gear" }] });
@@ -3229,6 +3569,7 @@ else if (scene === "lec") drawLec();
 else if (scene === "lecnivel") drawLecNivel();
 else if (scene === "lecficha") drawLecFicha();
 else if (scene === "midichk") drawMidiChk();
+else if (scene === "dmres") drawDmRes();
 else if (scene === "summary") drawSummary();
 else if (scene === "stats") drawStats();
 drawUpdateBanner();
