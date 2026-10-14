@@ -56,7 +56,7 @@ const BOTTOM_SOL = 2, BOTTOM_FA = -10;
 const PENDING = 12;
 const MAX_W   = 1100;
 // ---------- constantes nuevas ----------
-const APP_NAME = "ReadNotes Lectura", APP_VER = "0.1.3", SESSION_N = 32, CLEF_GAP = 0.55;
+const APP_NAME = "ReadNotes Lectura", APP_VER = "0.1.4", SESSION_N = 32, CLEF_GAP = 0.55;
 const DEV = /[?&]dev=1\b/.test(location.search);       // ?dev=1: permite probar sin piano (rueda y teclado en pantalla)
 const SHARED = "";   // sound/ y fonts/ están en la raíz del repositorio (en minúscula)
 const MODE_NAME = ["Clave de sol", "Clave de fa", "Claves mezcladas", "Armaduras clave de sol", "Armaduras clave de fa", "Melodías", "Lectura"];
@@ -161,7 +161,8 @@ skin: 0,
 accent: 0,
 klv: [0, 0],
 adapt: true,
-rec: 0
+rec: 0,
+hand: 0                                         // cursos de lectura: 0 = las dos manos · 1 = solo derecha (sol) · 2 = solo izquierda (fa)
 };
 function loadSettings() {
 try {
@@ -187,6 +188,7 @@ S.mic = raw.mic === true;
 S.midi = raw.midi !== false;
 S.adapt = raw.adapt !== false;
 S.rec    = Math.max(0, int(raw.rec, 0));
+S.hand   = clamp(int(raw.hand, 0), 0, 2);
 } catch (e) {  }
 applyAccent();
 }
@@ -786,6 +788,7 @@ function act0(id) {
     case "lay_l": S.layoutL = S.layoutL === 1 ? 0 : 1;  layout(); break;
     case "oct_on":  S.octVerify = true;   layout(); break;
     case "oct_off": S.octVerify = false;  layout(); break;
+    case "hand_n": S.hand = (S.hand + 1) % 3;  lecLoadProg();  lecConfirm = { id: "", t: 0 };  if (scene === "lecnivel" || scene === "lecficha" || scene === "dm" || scene === "dmres" || scene === "midichk") go("lec");  break;
     case "adapt_on":  S.adapt = true;  break;
     case "adapt_off": S.adapt = false; break;
   }
@@ -848,6 +851,9 @@ rows.push({ k: "sw", label: "Práctica adaptativa", value: S.adapt ? "Más prác
 rows.push({ k: "sw", label: "Micrófono", value: S.mic ? "Escucha la nota que cantas o tocas durante la partida" : micErr || "Responde con la voz o un instrumento", on: S.mic, id: S.mic ? "mic_off" : "mic_on" });
 rows.push({ k: "sw", label: "Verificación de octavas", value: S.octVerify ? "Se comprueba la octava exacta de la nota" : "Las notas introducidas pueden estar en cualquier octava", on: S.octVerify, id: S.octVerify ? "oct_off" : "oct_on" });
 rows.push({ k: "step", label: "Objetivo diario", value: S.goal ? S.goal + " notas al día" : "Desactivado", minus: "goal_-", plus: "goal_+" });
+rows.push({ k: "hd", label: "Lectura a primera vista" });
+rows.push({ k: "tap", label: "Mano en los cursos", value: S.hand === 1 ? "Solo mano derecha · clave de sol" : S.hand === 2 ? "Solo mano izquierda · clave de fa" : "Las dos manos", id: "hand_n" });
+rows.push({ k: "note", tight: true, small: true, label: "El progreso de cada modo se guarda por separado" });
 rows.push({ k: "hd", label: "Apariencia" });
 rows.push({ k: "tap", label: "Tema de la aplicación", value: S.skin === 1 ? "Oscuro" : "Claro", id: S.skin === 1 ? "skin_0" : "skin_1" });
 rows.push({ k: "colors", label: "Color de Acento" });
@@ -2447,8 +2453,10 @@ function drawSummary() {
   drawBar("Sesión completada", { back: "back", actions: [{ id: "open", icon: "gear" }] });
   const w = Math.min(L.cw - L.m * 2, 560), x = L.cx0 + (L.cw - w) / 2, cx = x + w / 2;
   const pad = clamp(w * 0.05, 14, 22), fs = clamp(w * 0.034, 12, 15);
-  const btnH = clamp(L.vh * 0.07, 46, 58), barH = btnH + L.m * 2, viewBot = L.bot - barH;
-  const bw = (w - 12) / 2, by = L.bot - L.m - btnH;
+  const btnH = clamp(L.vh * 0.07, 46, 58), nx = (playMode === 6 && sum.lec && sum.lec.done && sum.lec.next) || null;     // curso superado: botón para seguir con la siguiente etapa
+  const barH = btnH * (nx ? 2 : 1) + L.m * 2 + (nx ? 10 : 0), viewBot = L.bot - barH;
+  const bw = (w - 12) / 2, by = L.bot - L.m - btnH, ny = by - btnH - 10;
+  if (nx) addHit("s_next", x, ny, w, btnH);
   addHit("s_again", x, by, bw, btnH);
   addHit("s_menu", x + bw + 12, by, bw, btnH);
   const r = sum.rec, A = sum.all, P = sum.prevAgg;
@@ -2483,6 +2491,7 @@ function drawSummary() {
     const nt = q.done ? (q.newlyDone ? "¡Etapa superada!" : "Etapa superada") : q.pass ? "Sesión válida: " + q.streak + " de " + q.need : "Necesitas un " + Math.round(q.thr * 100) + " % para que cuente";
     text(nt, cx, y, fs + 1, q.done || q.pass ? AC.ok : AC.mid, "center", "bold", w);
     y += fs * 1.4;
+    if (q.next && q.done && !q.newlyDone) { text("Siguiente: " + q.next.id.replace(/^[a-z]+/, "") + " · " + q.next.titulo, cx, y, fs, AC.accT, "center", "", w);  y += fs * 1.4; }
     if (q.newlyDone && q.next) { text("Se desbloquea " + q.next.id.replace(/^[a-z]+/, "") + " · " + q.next.titulo, cx, y, fs, AC.accT, "center", "", w);  y += fs * 1.4; }
     y += pad * 0.6;
   }
@@ -2539,7 +2548,8 @@ function drawSummary() {
   // barra inferior fija
   ctx.fillStyle = AC.bg;  ctx.fillRect(0, viewBot, L.vw, L.vh - viewBot);
   line(0, viewBot, L.vw, viewBot, AC.line, 1);
-  actionBtn(x, by, bw, btnH, "Nueva sesión", true, hoverBtn === "s_again");
+  if (nx) actionBtn(x, ny, w, btnH, "Siguiente etapa · " + nx.id.replace(/^[a-z]+/, "") + " " + nx.titulo, true, hoverBtn === "s_next");
+  actionBtn(x, by, bw, btnH, nx ? "Repetir" : "Nueva sesión", !nx, hoverBtn === "s_again");
   actionBtn(x + bw + 12, by, bw, btnH, (playMode === 6 ? "Etapas" : "Menú principal"), false, hoverBtn === "s_menu");
 }
 
@@ -2898,10 +2908,11 @@ let lecSel = { course: null, stage: null };
 const lecChk = { last: -1, doOk: false };
 
 /* ---------- datos: cursos y progreso ---------- */
+const lecKey = () => LEC_KEY + (S.hand ? "_" + S.hand : "");      // el progreso de cada modo (dos manos / derecha / izquierda) se guarda aparte
 function lecLoadProg() {
-  try { const r = JSON.parse(localStorage.getItem(LEC_KEY) || "{}"); lecProg = r.prog || {}; lecOpen = r.open || {}; } catch (e) { lecProg = {}; lecOpen = {}; }
+  try { const r = JSON.parse(localStorage.getItem(lecKey()) || "{}"); lecProg = r.prog || {}; lecOpen = r.open || {}; } catch (e) { lecProg = {}; lecOpen = {}; }
 }
-function lecSaveProg() { try { localStorage.setItem(LEC_KEY, JSON.stringify({ v: 1, prog: lecProg, open: lecOpen })); } catch (e) {} }
+function lecSaveProg() { try { localStorage.setItem(lecKey(), JSON.stringify({ v: 1, prog: lecProg, open: lecOpen })); } catch (e) {} }
 async function lecLoad(force) {
   if (lec.state === "loading" || (lec.state === "ok" && !force)) return;
   lec.state = "loading";  lec.err = "";  dirty = true;
@@ -2919,13 +2930,20 @@ async function lecLoad(force) {
   dirty = true;
 }
 const lecStageFull = (course, e) => Object.assign({}, course.defectos || {}, e);
+function lecHandStage(st) {                            // null = la etapa no se puede tocar con una sola mano
+  if (!S.hand) return st;
+  const mine = S.hand === 1 ? "sol" : "fa";
+  if (st.modo === "dosManos") return null;
+  if (st.clave === "sol" || st.clave === "fa") return st.clave === mine ? st : null;       // las etapas de la otra clave se saltan
+  return Object.assign({}, st, { clave: mine });                                          // las de claves mezcladas se tocan solo en la clave de esa mano
+}
 function lecOrderA() {                                 // etapas de la vía A en orden de progresión
   const out = [];
   if (!lec.index) return out;
   for (const c of lec.index.cursos) {
     if (c.via !== "A") continue;
     const crs = lec.courses[c.id];
-    if (crs) for (const e of crs.etapas) out.push({ course: crs, stage: lecStageFull(crs, e) });
+    if (crs) for (const e of crs.etapas) { const s2 = lecHandStage(lecStageFull(crs, e)); if (s2) out.push({ course: crs, stage: s2 }); }
   }
   return out;
 }
@@ -2935,7 +2953,7 @@ function lecOrderAll() {                               // vía A y vía B, cada 
   for (const via of ["A", "B"]) for (const c of lec.index.cursos) {
     if (c.via !== via) continue;
     const crs = lec.courses[c.id];
-    if (crs) for (const e of crs.etapas) out.push({ course: crs, stage: lecStageFull(crs, e) });
+    if (crs) for (const e of crs.etapas) { const s2 = lecHandStage(lecStageFull(crs, e)); if (s2) out.push({ course: crs, stage: s2 }); }
   }
   return out;
 }
@@ -3067,7 +3085,12 @@ function lecAct(id) {
   }
   if (playMode === 6 && scene === "summary") {
     if (id === "s_again") { lecStart(lecRun.stage.id);  return true; }
-    if (id === "s_menu") { go("lecnivel");  return true; }
+    if (id === "s_next") { const nx = sum && sum.lec && sum.lec.next;  if (nx) lecStart(nx.id);  return true; }
+    if (id === "s_menu") {
+      const q = sum && sum.lec, f = q && q.done && q.next ? lecFind(q.next.id) : null;     // si se ha superado, la lista se abre en el nivel de la etapa siguiente
+      if (f) lecSel = { course: f.course.curso.id, stage: f.stage.id };
+      go("lecnivel");  return true;
+    }
   }
   return false;
 }
@@ -3096,7 +3119,7 @@ function lecStageState(i, order) {
 }
 function lecCourseRow(x, y, w, c, top) {
   const h = clamp(L.vh * 0.115, 72, 92), crs = lec.courses[c.id], A = c.via === "A";
-  const locked = lecCourseLocked(c.id), done = crs ? crs.etapas.filter((e) => lecDone(e.id)).length : 0, n = c.etapas;
+  const vis = lecOrderAll().filter((o) => o.course.curso.id === c.id), locked = lecCourseLocked(c.id), done = vis.filter((o) => lecDone(o.stage.id)).length, n = vis.length || c.etapas;
   const id = "lc_" + c.id, hov = hoverBtn === id;
   ctx.fillStyle = hov ? accA(AC.light ? 0.16 : 0.28) : AC.card;  rr(x, y, w, h, 12);  ctx.fill();
   ctx.strokeStyle = hov ? AC.accV : AC.edge;  ctx.lineWidth = hov ? 1.5 : 1;  ctx.stroke();
@@ -3125,6 +3148,7 @@ function drawLec() {
   text(ok ? (ins.length ? ins.map((i) => i.name || "teclado").join(", ") : "Modo de prueba (sin teclado)") : "Los cursos se tocan con el piano · toca para conectarlo", x + 44, y + ch * 0.7, clamp(ch * 0.2, 11, 14), AC.dim, "left", "", w - 64);
   visHit("lec_midi", x, y, w, ch, top);
   y += ch + 14;
+  if (S.hand) { text("Una sola mano: " + (S.hand === 1 ? "derecha (clave de sol)" : "izquierda (clave de fa)") + " · se cambia en Ajustes", x + 4, y + 2, fs - 1, AC.accT, "left", "bold", w);  y += 24; }
   if (lec.state !== "ok") {
     text(lec.state === "error" ? lec.err : "Cargando cursos…", cx, y + 30, fs + 1, lec.state === "error" ? AC.bad : AC.dim, "center", "", w);
     if (lec.state === "error") { actionBtn(x, y + 56, w, 48, "Reintentar", true, hoverBtn === "lec_reload");  visHit("lec_reload", x, y + 56, w, 48, top);  y += 116; } else y += 60;
@@ -3137,9 +3161,10 @@ function drawLec() {
       y += bh + 18;
     } else { text("¡Vía A completada!", cx, y + 16, fs + 2, AC.ok, "center", "bold", w);  y += 42; }
     for (const via of ["A", "B"]) {
+      if (S.hand && via === "B") { text("VÍA B · DOS MANOS: no disponible con una sola mano", x + 4, y + 8, fs - 1, AC.dim, "left", "bold", w);  y += 30;  continue; }
       text(via === "A" ? "VÍA A · UNA LÍNEA" : "VÍA B · DOS MANOS", x + 4, y + 8, fs, AC.accT, "left", "bold", w);
       y += 26;
-      for (const c of lec.index.cursos.filter((q) => q.via === via)) y = lecCourseRow(x, y, w, c, top);
+      for (const c of lec.index.cursos.filter((q) => q.via === via && lecOrderAll().some((o) => o.course.curso.id === q.id))) y = lecCourseRow(x, y, w, c, top);
       y += 6;
     }
   }

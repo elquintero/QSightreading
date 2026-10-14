@@ -2,7 +2,7 @@
    Cambia VERSION en cada publicación: así el móvil detecta la nueva versión y muestra el aviso.
    IMPORTANTE: todas las cachés de esta app empiezan por "lectura-". Las de la app hermana empiezan por "readnotes-"
    y su service worker borra las que no conoce, así que no se deben mezclar los prefijos. */
-const VERSION = "0.1.3";
+const VERSION = "0.1.4";
 const CACHE = "lectura-" + VERSION;
 const CURSOS = "lectura-cursos";           // cursos (JSON): se conservan entre versiones
 const SOUND = "readnotes-sound";           // muestras de piano de la app hermana: se comparten y aquí nunca se borran
