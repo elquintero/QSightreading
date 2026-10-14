@@ -2,7 +2,7 @@
    Cambia VERSION en cada publicación: así el móvil detecta la nueva versión y muestra el aviso.
    IMPORTANTE: todas las cachés de esta app empiezan por "lectura-". Las de la app hermana empiezan por "readnotes-"
    y su service worker borra las que no conoce, así que no se deben mezclar los prefijos. */
-const VERSION = "0.1.0";
+const VERSION = "0.1.1";
 const CACHE = "lectura-" + VERSION;
 const CURSOS = "lectura-cursos";           // cursos (JSON): se conservan entre versiones
 const SOUND = "readnotes-sound";           // muestras de piano de la app hermana: se comparten y aquí nunca se borran
@@ -13,7 +13,7 @@ const ASSETS = [
   "cursos/d1-posicion-fija.json", "cursos/d2-mas-intervalos.json", "cursos/d3-cambios-de-posicion.json"
 ];
 // Opcionales (viven en la app hermana): si faltan no deben romper la instalación
-const OPTIONAL = ["../fonts/Bravura.otf", "../Fonts/Bravura.otf"];
+const OPTIONAL = ["fonts/Bravura.otf", "Fonts/Bravura.otf"];
 
 self.addEventListener("install", (e) => {
   // Sin skipWaiting automático: la app avisa y el usuario decide cuándo actualizar

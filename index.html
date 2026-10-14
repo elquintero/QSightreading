@@ -10,7 +10,7 @@
 <meta name="apple-mobile-web-app-title" content="Lectura">
 <meta name="description" content="ReadNotes: aprende a leer notas musicales en clave de sol y de fa.">
 <link rel="manifest" href="manifest.webmanifest">
-<link rel="preload" href="../fonts/Bravura.otf" as="font" type="font/otf" crossorigin>
+<link rel="preload" href="fonts/Bravura.otf" as="font" type="font/otf" crossorigin>
 <link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png">
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 <title>ReadNotes Lectura</title>
@@ -56,7 +56,7 @@ const BOTTOM_SOL = 2, BOTTOM_FA = -10;
 const PENDING = 12;
 const MAX_W   = 1100;
 // ---------- constantes nuevas ----------
-const APP_NAME = "ReadNotes Lectura", APP_VER = "0.1.0", SESSION_N = 32, CLEF_GAP = 0.55;
+const APP_NAME = "ReadNotes Lectura", APP_VER = "0.1.1", SESSION_N = 32, CLEF_GAP = 0.55;
 const DEV = /[?&]dev=1\b/.test(location.search);       // ?dev=1: permite probar sin piano (rueda y teclado en pantalla)
 const SHARED = "../";                                    // carpeta de la app hermana con Sound/ y fonts/ (cámbiala si la app va en otro sitio)
 const MODE_NAME = ["Clave de sol", "Clave de fa", "Claves mezcladas", "Armaduras clave de sol", "Armaduras clave de fa", "Melodías", "Lectura"];
@@ -3278,7 +3278,7 @@ const boot = () => {
     ? document.fonts.load("40px Bravura", "\uE050\uE062\uE1D5\uE1D6").then((fs) => { okFont = !!(fs && fs.length); }, () => { okFont = false; })
     : Promise.resolve();
   Promise.race([fontP, new Promise((r) => setTimeout(r, 6000))]).then(() => {
-    setP(0.85, okFont ? "Preparando…" : "No se encontró ../fonts/Bravura.otf: se usa una fuente de reserva");
+    setP(0.85, okFont ? "Preparando…" : "No se encontró fonts/Bravura.otf: se usa una fuente de reserva");
     const wait = Math.max(0, (okFont ? 900 : 2400) - (performance.now() - t0));      // el logo se ve al menos ~1 s
     setTimeout(() => {
       start();
@@ -3293,7 +3293,7 @@ setTimeout(boot, 4000);                                    // si "load" tarda (r
 <style>
 @font-face {
   font-family: Bravura;
-  src: url("../fonts/Bravura.otf") format("opentype"), url("../Fonts/Bravura.otf") format("opentype");
+  src: url("fonts/Bravura.otf") format("opentype"), url("Fonts/Bravura.otf") format("opentype");
 }
 </style>
 </body>
