@@ -1,0 +1,264 @@
+{
+  "esquema": 3,
+  "curso": { "id": "d3", "via": "B", "nivel": 3, "etiqueta": "Dos manos · Nivel 3", "titulo": "Cambios de posición", "subtitulo": "Primero una mano, después las dos, hasta la octava", "descripcion": "Las manos aprenden a cambiar de posición, primero una y luego las dos, ampliando el registro de cada mano hasta la octava.", "intervaloEstrella": "Cambios de posición", "rango": "hasta una octava por mano" },
+  "defectos": {
+    "longitud": 32,
+    "armadura": 0,
+    "ritmo": null,
+    "final": "tonica",
+    "maxRepeticiones": 2,
+    "adaptativa": { "activa": true, "maxDesvio": 15 },
+    "pasa": { "precision": 0.9, "sesiones": 2 },
+    "altura": "obligatoria",
+    "entrada": {
+      "requiere": ["midi"],
+      "octava": "exacta",
+      "orientacion": "horizontal"
+    },
+    "sincronia": { "ventanaMs": 120, "nota": "Medido con el P-145 (12 intentos): mediana 12 ms, p90 31 ms, máximo 98 ms. Se deja margen para leer con carga." },
+    "sinCruce": true
+  },
+  "etapas": [
+    {
+      "id": "d3.1",
+      "orden": 1,
+      "titulo": "La derecha cambia de posición",
+      "resumen": "Ventana móvil de seis notas en la mano derecha.",
+      "foco": "Cambios de posición",
+      "cambia": "Registro: ventana móvil de 6 notas en la mano derecha.",
+      "consejo": "Antes de cambiar de posición, localiza la primera nota nueva con tu punto de referencia más cercano.",
+      "modo": "dosManos",
+      "relacion": "libre",
+      "derecha": {
+        "registro": { "min": 0, "max": 8 },
+        "posicion": {
+          "tipo": "movil",
+          "anchura": 6,
+          "inicios": [0, 1, 2, 3],
+          "cadaNotas": 8
+        },
+        "intervalos": { "0": 5, "1": 35, "2": 60 },
+        "anclas": [0, 4]
+      },
+      "izquierda": {
+        "registro": { "min": -7, "max": -3 },
+        "posicion": {
+          "tipo": "fija",
+          "anchura": 5,
+          "inicios": [-7]
+        },
+        "intervalos": { "0": 5, "1": 35, "2": 60 },
+        "anclas": [-7, -3]
+      },
+      "maxMismaDireccion": 4,
+      "perfil": {
+        "intervalos": { "derecha": 2, "izquierda": 2 },
+        "registro": { "derecha": 1, "izquierda": 0 },
+        "direccion": 0,
+        "patrones": 0,
+        "manos": 6,
+        "ritmo": 0,
+        "continuidad": 0
+      },
+      "lineas": { "sol": 1, "fa": 0 },
+      "armadura": 0,
+      "indiceDificultad": 11,
+      "notaMin": { "derecha": "Do4", "izquierda": "Do3" },
+      "notaMax": { "derecha": "Re5", "izquierda": "Sol3" },
+      "cuotaSimulada": { "mueven": 90.3, "mismoSentido": 45.1, "sentidoOpuesto": 45.2, "tercerasDerecha": 60.0, "tercerasIzquierda": 60.0 }
+    },
+    {
+      "id": "d3.2",
+      "orden": 2,
+      "titulo": "La izquierda cambia de posición",
+      "resumen": "Ventana móvil de seis notas en la mano izquierda.",
+      "foco": "Cambios de posición",
+      "cambia": "Variante lateral: el cambio de posición pasa a la mano izquierda.",
+      "consejo": "La mano izquierda se mueve por debajo del Do central: no la cruces con la derecha.",
+      "modo": "dosManos",
+      "relacion": "libre",
+      "derecha": {
+        "registro": { "min": 0, "max": 4 },
+        "posicion": {
+          "tipo": "fija",
+          "anchura": 5,
+          "inicios": [0]
+        },
+        "intervalos": { "0": 5, "1": 35, "2": 60 },
+        "anclas": [0, 4]
+      },
+      "izquierda": {
+        "registro": { "min": -9, "max": -1 },
+        "posicion": {
+          "tipo": "movil",
+          "anchura": 6,
+          "inicios": [-9, -8, -7, -6],
+          "cadaNotas": 8
+        },
+        "intervalos": { "0": 5, "1": 35, "2": 60 },
+        "anclas": [-7, -3]
+      },
+      "maxMismaDireccion": 4,
+      "perfil": {
+        "intervalos": { "derecha": 2, "izquierda": 2 },
+        "registro": { "derecha": 0, "izquierda": 1 },
+        "direccion": 0,
+        "patrones": 0,
+        "manos": 6,
+        "ritmo": 0,
+        "continuidad": 0
+      },
+      "lateral": true,
+      "lineas": { "sol": 1, "fa": 0 },
+      "armadura": 0,
+      "indiceDificultad": 11,
+      "notaMin": { "derecha": "Do4", "izquierda": "La2" },
+      "notaMax": { "derecha": "Sol4", "izquierda": "Si3" },
+      "cuotaSimulada": { "mueven": 90.2, "mismoSentido": 45.2, "sentidoOpuesto": 45.0, "tercerasDerecha": 60.2, "tercerasIzquierda": 60.0 }
+    },
+    {
+      "id": "d3.3",
+      "orden": 3,
+      "titulo": "Ambas manos cambian",
+      "resumen": "Las dos manos cambian de posición con ventana de seis notas.",
+      "foco": "Cambios de posición",
+      "cambia": "Registro: ventana móvil de 6 notas también en la izquierda.",
+      "consejo": "Mira la primera nota de la frase siguiente en las dos manos antes de terminar la actual.",
+      "modo": "dosManos",
+      "relacion": "libre",
+      "derecha": {
+        "registro": { "min": 0, "max": 8 },
+        "posicion": {
+          "tipo": "movil",
+          "anchura": 6,
+          "inicios": [0, 1, 2, 3],
+          "cadaNotas": 8
+        },
+        "intervalos": { "0": 5, "1": 35, "2": 60 },
+        "anclas": [0, 4]
+      },
+      "izquierda": {
+        "registro": { "min": -9, "max": -1 },
+        "posicion": {
+          "tipo": "movil",
+          "anchura": 6,
+          "inicios": [-9, -8, -7, -6],
+          "cadaNotas": 8
+        },
+        "intervalos": { "0": 5, "1": 35, "2": 60 },
+        "anclas": [-7, -3]
+      },
+      "maxMismaDireccion": 4,
+      "perfil": {
+        "intervalos": { "derecha": 2, "izquierda": 2 },
+        "registro": { "derecha": 1, "izquierda": 1 },
+        "direccion": 0,
+        "patrones": 0,
+        "manos": 6,
+        "ritmo": 0,
+        "continuidad": 0
+      },
+      "lineas": { "sol": 1, "fa": 0 },
+      "armadura": 0,
+      "indiceDificultad": 12,
+      "notaMin": { "derecha": "Do4", "izquierda": "La2" },
+      "notaMax": { "derecha": "Re5", "izquierda": "Si3" },
+      "cuotaSimulada": { "mueven": 90.5, "mismoSentido": 45.3, "sentidoOpuesto": 45.2, "tercerasDerecha": 60.2, "tercerasIzquierda": 60.0 }
+    },
+    {
+      "id": "d3.4",
+      "orden": 4,
+      "titulo": "La derecha amplía a una octava",
+      "resumen": "La derecha lee una octava completa; la izquierda sigue con ventana móvil.",
+      "foco": "Octava en la derecha",
+      "cambia": "Registro: octava fija (8 notas) en la mano derecha.",
+      "consejo": "Sitúate con el Do central, el Sol y el Do agudo antes de empezar.",
+      "modo": "dosManos",
+      "relacion": "libre",
+      "derecha": {
+        "registro": { "min": 0, "max": 7 },
+        "posicion": {
+          "tipo": "fija",
+          "anchura": 8,
+          "inicios": [0]
+        },
+        "intervalos": { "0": 5, "1": 35, "2": 60 },
+        "anclas": [0, 4]
+      },
+      "izquierda": {
+        "registro": { "min": -9, "max": -1 },
+        "posicion": {
+          "tipo": "movil",
+          "anchura": 6,
+          "inicios": [-9, -8, -7, -6],
+          "cadaNotas": 8
+        },
+        "intervalos": { "0": 5, "1": 35, "2": 60 },
+        "anclas": [-7, -3]
+      },
+      "maxMismaDireccion": 4,
+      "perfil": {
+        "intervalos": { "derecha": 2, "izquierda": 2 },
+        "registro": { "derecha": 2, "izquierda": 1 },
+        "direccion": 0,
+        "patrones": 0,
+        "manos": 6,
+        "ritmo": 0,
+        "continuidad": 0
+      },
+      "lineas": { "sol": 1, "fa": 0 },
+      "armadura": 0,
+      "indiceDificultad": 13,
+      "notaMin": { "derecha": "Do4", "izquierda": "La2" },
+      "notaMax": { "derecha": "Do5", "izquierda": "Si3" },
+      "cuotaSimulada": { "mueven": 90.4, "mismoSentido": 45.4, "sentidoOpuesto": 45.0, "tercerasDerecha": 59.7, "tercerasIzquierda": 60.1 }
+    },
+    {
+      "id": "d3.5",
+      "orden": 5,
+      "titulo": "Ambas manos a la octava",
+      "resumen": "Las dos manos leen una octava completa.",
+      "foco": "Octava en ambas",
+      "cambia": "Registro: octava fija (8 notas) también en la izquierda.",
+      "consejo": "Con la octava completa en las dos manos, lee la zona del pentagrama antes que cada nota.",
+      "modo": "dosManos",
+      "relacion": "libre",
+      "derecha": {
+        "registro": { "min": 0, "max": 7 },
+        "posicion": {
+          "tipo": "fija",
+          "anchura": 8,
+          "inicios": [0]
+        },
+        "intervalos": { "0": 5, "1": 35, "2": 60 },
+        "anclas": [0, 4]
+      },
+      "izquierda": {
+        "registro": { "min": -8, "max": -1 },
+        "posicion": {
+          "tipo": "fija",
+          "anchura": 8,
+          "inicios": [-8]
+        },
+        "intervalos": { "0": 5, "1": 35, "2": 60 },
+        "anclas": [-7, -3]
+      },
+      "maxMismaDireccion": 4,
+      "perfil": {
+        "intervalos": { "derecha": 2, "izquierda": 2 },
+        "registro": { "derecha": 2, "izquierda": 2 },
+        "direccion": 0,
+        "patrones": 0,
+        "manos": 6,
+        "ritmo": 0,
+        "continuidad": 0
+      },
+      "lineas": { "sol": 1, "fa": 0 },
+      "armadura": 0,
+      "indiceDificultad": 14,
+      "notaMin": { "derecha": "Do4", "izquierda": "Si2" },
+      "notaMax": { "derecha": "Do5", "izquierda": "Si3" },
+      "cuotaSimulada": { "mueven": 90.3, "mismoSentido": 45.3, "sentidoOpuesto": 44.9, "tercerasDerecha": 60.1, "tercerasIzquierda": 59.8 }
+    }
+  ]
+}

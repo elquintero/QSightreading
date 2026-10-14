@@ -1,0 +1,259 @@
+{
+  "esquema": 3,
+  "curso": { "id": "d2", "via": "B", "nivel": 2, "etiqueta": "Dos manos · Nivel 2", "titulo": "Más material por mano", "subtitulo": "Terceras primero en una mano y después en las dos", "descripcion": "Cada mano lee más material: primero terceras en una mano, después en las dos. La mano que lleva la melodía avanza antes que la que acompaña.", "intervaloEstrella": "Terceras", "rango": "5 notas por mano" },
+  "defectos": {
+    "longitud": 32,
+    "armadura": 0,
+    "ritmo": null,
+    "final": "tonica",
+    "maxRepeticiones": 2,
+    "adaptativa": { "activa": true, "maxDesvio": 15 },
+    "pasa": { "precision": 0.9, "sesiones": 2 },
+    "altura": "obligatoria",
+    "entrada": {
+      "requiere": ["midi"],
+      "octava": "exacta",
+      "orientacion": "horizontal"
+    },
+    "sincronia": { "ventanaMs": 120, "nota": "Medido con el P-145 (12 intentos): mediana 12 ms, p90 31 ms, máximo 98 ms. Se deja margen para leer con carga." },
+    "sinCruce": true
+  },
+  "etapas": [
+    {
+      "id": "d2.1",
+      "orden": 1,
+      "titulo": "Terceras en la derecha",
+      "resumen": "La derecha añade terceras; la izquierda sigue con segundas.",
+      "foco": "Terceras en la derecha",
+      "cambia": "Intervalos: entran las terceras (30 %) en la mano derecha.",
+      "consejo": "Una tercera salta una nota: de línea a línea o de espacio a espacio.",
+      "modo": "dosManos",
+      "relacion": "libre",
+      "derecha": {
+        "registro": { "min": 0, "max": 4 },
+        "posicion": {
+          "tipo": "fija",
+          "anchura": 5,
+          "inicios": [0]
+        },
+        "intervalos": { "0": 10, "1": 60, "2": 30 },
+        "anclas": [0, 4]
+      },
+      "izquierda": {
+        "registro": { "min": -7, "max": -3 },
+        "posicion": {
+          "tipo": "fija",
+          "anchura": 5,
+          "inicios": [-7]
+        },
+        "intervalos": { "0": 20, "1": 80 },
+        "anclas": [-7, -3]
+      },
+      "maxMismaDireccion": 4,
+      "perfil": {
+        "intervalos": { "derecha": 1, "izquierda": 0 },
+        "registro": { "derecha": 0, "izquierda": 0 },
+        "direccion": 0,
+        "patrones": 0,
+        "manos": 6,
+        "ritmo": 0,
+        "continuidad": 0
+      },
+      "lineas": { "sol": 1, "fa": 0 },
+      "armadura": 0,
+      "indiceDificultad": 7,
+      "notaMin": { "derecha": "Do4", "izquierda": "Do3" },
+      "notaMax": { "derecha": "Sol4", "izquierda": "Sol3" },
+      "cuotaSimulada": { "mueven": 72.2, "mismoSentido": 35.8, "sentidoOpuesto": 36.4, "tercerasDerecha": 29.8 }
+    },
+    {
+      "id": "d2.2",
+      "orden": 2,
+      "titulo": "Terceras en la izquierda",
+      "resumen": "Las terceras pasan a la izquierda; la derecha lee segundas.",
+      "foco": "Terceras en la izquierda",
+      "cambia": "Variante lateral: las terceras pasan a la mano izquierda.",
+      "consejo": "En clave de Fa las líneas y espacios cambian de nombre: apóyate en el Fa y el Do central.",
+      "modo": "dosManos",
+      "relacion": "libre",
+      "derecha": {
+        "registro": { "min": 0, "max": 4 },
+        "posicion": {
+          "tipo": "fija",
+          "anchura": 5,
+          "inicios": [0]
+        },
+        "intervalos": { "0": 20, "1": 80 },
+        "anclas": [0, 4]
+      },
+      "izquierda": {
+        "registro": { "min": -7, "max": -3 },
+        "posicion": {
+          "tipo": "fija",
+          "anchura": 5,
+          "inicios": [-7]
+        },
+        "intervalos": { "0": 10, "1": 60, "2": 30 },
+        "anclas": [-7, -3]
+      },
+      "maxMismaDireccion": 4,
+      "perfil": {
+        "intervalos": { "derecha": 0, "izquierda": 1 },
+        "registro": { "derecha": 0, "izquierda": 0 },
+        "direccion": 0,
+        "patrones": 0,
+        "manos": 6,
+        "ritmo": 0,
+        "continuidad": 0
+      },
+      "lateral": true,
+      "lineas": { "sol": 1, "fa": 0 },
+      "armadura": 0,
+      "indiceDificultad": 7,
+      "notaMin": { "derecha": "Do4", "izquierda": "Do3" },
+      "notaMax": { "derecha": "Sol4", "izquierda": "Sol3" },
+      "cuotaSimulada": { "mueven": 71.9, "mismoSentido": 35.8, "sentidoOpuesto": 36.1, "tercerasIzquierda": 30.0 }
+    },
+    {
+      "id": "d2.3",
+      "orden": 3,
+      "titulo": "Terceras en ambas",
+      "resumen": "Terceras en las dos manos (30 %).",
+      "foco": "Terceras en ambas",
+      "cambia": "Intervalos: terceras (30 %) también en la otra mano.",
+      "consejo": "Identifica el intervalo de cada mano por separado antes de tocar.",
+      "modo": "dosManos",
+      "relacion": "libre",
+      "derecha": {
+        "registro": { "min": 0, "max": 4 },
+        "posicion": {
+          "tipo": "fija",
+          "anchura": 5,
+          "inicios": [0]
+        },
+        "intervalos": { "0": 10, "1": 60, "2": 30 },
+        "anclas": [0, 4]
+      },
+      "izquierda": {
+        "registro": { "min": -7, "max": -3 },
+        "posicion": {
+          "tipo": "fija",
+          "anchura": 5,
+          "inicios": [-7]
+        },
+        "intervalos": { "0": 10, "1": 60, "2": 30 },
+        "anclas": [-7, -3]
+      },
+      "maxMismaDireccion": 4,
+      "perfil": {
+        "intervalos": { "derecha": 1, "izquierda": 1 },
+        "registro": { "derecha": 0, "izquierda": 0 },
+        "direccion": 0,
+        "patrones": 0,
+        "manos": 6,
+        "ritmo": 0,
+        "continuidad": 0
+      },
+      "lineas": { "sol": 1, "fa": 0 },
+      "armadura": 0,
+      "indiceDificultad": 8,
+      "notaMin": { "derecha": "Do4", "izquierda": "Do3" },
+      "notaMax": { "derecha": "Sol4", "izquierda": "Sol3" },
+      "cuotaSimulada": { "mueven": 80.8, "mismoSentido": 40.1, "sentidoOpuesto": 40.7, "tercerasDerecha": 30.0, "tercerasIzquierda": 29.9 }
+    },
+    {
+      "id": "d2.4",
+      "orden": 4,
+      "titulo": "La derecha lleva la melodía",
+      "resumen": "Terceras dominantes en la derecha; la izquierda acompaña.",
+      "foco": "Terceras dominantes",
+      "cambia": "Intervalos: las terceras dominan (60 %) en la derecha.",
+      "consejo": "La mano que lleva la melodía lee más intervalos; la otra mantiene el apoyo.",
+      "modo": "dosManos",
+      "relacion": "libre",
+      "derecha": {
+        "registro": { "min": 0, "max": 4 },
+        "posicion": {
+          "tipo": "fija",
+          "anchura": 5,
+          "inicios": [0]
+        },
+        "intervalos": { "0": 5, "1": 35, "2": 60 },
+        "anclas": [0, 4]
+      },
+      "izquierda": {
+        "registro": { "min": -7, "max": -3 },
+        "posicion": {
+          "tipo": "fija",
+          "anchura": 5,
+          "inicios": [-7]
+        },
+        "intervalos": { "0": 10, "1": 60, "2": 30 },
+        "anclas": [-7, -3]
+      },
+      "maxMismaDireccion": 4,
+      "perfil": {
+        "intervalos": { "derecha": 2, "izquierda": 1 },
+        "registro": { "derecha": 0, "izquierda": 0 },
+        "direccion": 0,
+        "patrones": 0,
+        "manos": 6,
+        "ritmo": 0,
+        "continuidad": 0
+      },
+      "lineas": { "sol": 1, "fa": 0 },
+      "armadura": 0,
+      "indiceDificultad": 9,
+      "notaMin": { "derecha": "Do4", "izquierda": "Do3" },
+      "notaMax": { "derecha": "Sol4", "izquierda": "Sol3" },
+      "cuotaSimulada": { "mueven": 85.4, "mismoSentido": 42.5, "sentidoOpuesto": 42.8, "tercerasDerecha": 60.0, "tercerasIzquierda": 30.2 }
+    },
+    {
+      "id": "d2.5",
+      "orden": 5,
+      "titulo": "Terceras dominantes en ambas",
+      "resumen": "Terceras dominantes (60 %) en las dos manos.",
+      "foco": "Terceras dominantes",
+      "cambia": "Intervalos: las terceras dominan (60 %) también en la izquierda.",
+      "consejo": "No pares aunque falles: sigue leyendo la columna siguiente.",
+      "modo": "dosManos",
+      "relacion": "libre",
+      "derecha": {
+        "registro": { "min": 0, "max": 4 },
+        "posicion": {
+          "tipo": "fija",
+          "anchura": 5,
+          "inicios": [0]
+        },
+        "intervalos": { "0": 5, "1": 35, "2": 60 },
+        "anclas": [0, 4]
+      },
+      "izquierda": {
+        "registro": { "min": -7, "max": -3 },
+        "posicion": {
+          "tipo": "fija",
+          "anchura": 5,
+          "inicios": [-7]
+        },
+        "intervalos": { "0": 5, "1": 35, "2": 60 },
+        "anclas": [-7, -3]
+      },
+      "maxMismaDireccion": 4,
+      "perfil": {
+        "intervalos": { "derecha": 2, "izquierda": 2 },
+        "registro": { "derecha": 0, "izquierda": 0 },
+        "direccion": 0,
+        "patrones": 0,
+        "manos": 6,
+        "ritmo": 0,
+        "continuidad": 0
+      },
+      "lineas": { "sol": 1, "fa": 0 },
+      "armadura": 0,
+      "indiceDificultad": 10,
+      "notaMin": { "derecha": "Do4", "izquierda": "Do3" },
+      "notaMax": { "derecha": "Sol4", "izquierda": "Sol3" },
+      "cuotaSimulada": { "mueven": 90.5, "mismoSentido": 45.1, "sentidoOpuesto": 45.4, "tercerasDerecha": 60.2, "tercerasIzquierda": 60.3 }
+    }
+  ]
+}

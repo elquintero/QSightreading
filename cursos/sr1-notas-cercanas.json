@@ -1,0 +1,217 @@
+{
+  "esquema": 3,
+  "curso": { "id": "sr1", "nivel": 1, "etiqueta": "Nivel inicial", "titulo": "Notas cercanas", "subtitulo": "Segundas y primeras terceras", "descripcion": "Practicas reconocer las notas en el pentagrama sin tener que calcular grandes saltos. Es ideal para adquirir fluidez y automatizar la asociación entre nota escrita y tecla.", "intervaloEstrella": "Segunda (con terceras al final)", "rango": "5 a 6 notas", "via": "A" },
+  "defectos": {
+    "longitud": 32,
+    "armadura": 0,
+    "ritmo": null,
+    "final": "tonica",
+    "maxRepeticiones": 2,
+    "adaptativa": { "activa": true, "maxDesvio": 15 },
+    "pasa": { "precision": 0.9, "sesiones": 2 },
+    "altura": "obligatoria",
+    "entrada": {
+      "requiere": ["midi"],
+      "octava": "exacta"
+    }
+  },
+  "etapas": [
+    {
+      "id": "sr1.1",
+      "orden": 1,
+      "titulo": "Sol: posición del Do central",
+      "resumen": "Mano derecha. Repeticiones y segundas en cinco notas.",
+      "foco": "Segundas y repeticiones",
+      "cambia": "Etapa base.",
+      "clave": "sol",
+      "consejo": "Antes de tocar, mira el dibujo: ¿sube, baja o se repite? Cada paso es la línea o el espacio vecino.",
+      "registro": {
+        "sol": { "min": 0, "max": 4 }
+      },
+      "posicion": {
+        "tipo": "fija",
+        "anchura": 5,
+        "inicios": {
+          "sol": [0]
+        }
+      },
+      "anclas": {
+        "sol": [0, 4]
+      },
+      "intervalos": { "0": 20, "1": 80 },
+      "estrella": [1],
+      "perfil": { "intervalos": 0, "registro": 0, "direccion": 0, "patrones": 0, "manos": 0, "ritmo": 0, "continuidad": 0 },
+      "maxMismaDireccion": 4,
+      "recuperarSalto": null,
+      "maxSaltosSeguidos": null,
+      "lineas": { "sol": 1, "fa": 0 },
+      "armadura": 0,
+      "cuotaEstrella": 80,
+      "indiceDificultad": 0,
+      "notaMin": { "sol": "Do4" },
+      "notaMax": { "sol": "Sol4" },
+      "cuotaSimulada": 79.7
+    },
+    {
+      "id": "sr1.2",
+      "orden": 2,
+      "titulo": "Fa: posición del Do central",
+      "resumen": "Mano izquierda. Repeticiones y segundas en cinco notas.",
+      "foco": "Segundas y repeticiones",
+      "cambia": "Variante lateral: misma dificultad en clave de Fa.",
+      "lateral": true,
+      "clave": "fa",
+      "consejo": "El Fa de la cuarta línea y el Do central de la línea adicional son tus puntos de referencia.",
+      "registro": {
+        "fa": { "min": -4, "max": 0 }
+      },
+      "posicion": {
+        "tipo": "fija",
+        "anchura": 5,
+        "inicios": {
+          "fa": [-4]
+        }
+      },
+      "anclas": {
+        "fa": [-4, 0]
+      },
+      "intervalos": { "0": 20, "1": 80 },
+      "estrella": [1],
+      "perfil": { "intervalos": 0, "registro": 0, "direccion": 0, "patrones": 0, "manos": 0, "ritmo": 0, "continuidad": 0 },
+      "maxMismaDireccion": 4,
+      "recuperarSalto": null,
+      "maxSaltosSeguidos": null,
+      "lineas": { "sol": 0, "fa": 1 },
+      "armadura": 0,
+      "cuotaEstrella": 80,
+      "indiceDificultad": 0,
+      "notaMin": { "fa": "Fa3" },
+      "notaMax": { "fa": "Do4" },
+      "cuotaSimulada": 80.1
+    },
+    {
+      "id": "sr1.3",
+      "orden": 3,
+      "titulo": "Ambas claves",
+      "resumen": "Alterna Sol y Fa pasando por el Do central.",
+      "foco": "Cambio de clave",
+      "cambia": "Manos: de una mano a alternar las dos.",
+      "clave": "mixta",
+      "tramos": [3, 6],
+      "consejo": "Al cambiar de clave, el Do central es el puente: se escribe igual que la nota vecina de la otra clave.",
+      "registro": {
+        "sol": { "min": 0, "max": 4 },
+        "fa": { "min": -4, "max": 0 }
+      },
+      "posicion": {
+        "tipo": "fija",
+        "anchura": 5,
+        "inicios": {
+          "sol": [0],
+          "fa": [-4]
+        }
+      },
+      "cambioDeClave": { "modo": "puente", "nota": 0 },
+      "anclas": {
+        "sol": [0, 4],
+        "fa": [-4, 0]
+      },
+      "intervalos": { "0": 20, "1": 80 },
+      "estrella": [1],
+      "perfil": { "intervalos": 0, "registro": 0, "direccion": 0, "patrones": 0, "manos": 1, "ritmo": 0, "continuidad": 0 },
+      "maxMismaDireccion": 4,
+      "recuperarSalto": null,
+      "maxSaltosSeguidos": null,
+      "lineas": { "sol": 1, "fa": 1 },
+      "armadura": 0,
+      "cuotaEstrella": 80,
+      "indiceDificultad": 1,
+      "notaMin": { "sol": "Do4", "fa": "Fa3" },
+      "notaMax": { "sol": "Sol4", "fa": "Do4" },
+      "cuotaSimulada": 80.0
+    },
+    {
+      "id": "sr1.4",
+      "orden": 4,
+      "titulo": "Primeras terceras",
+      "resumen": "Segundas con terceras: de línea a línea o de espacio a espacio.",
+      "foco": "Terceras",
+      "cambia": "Intervalos: entran las terceras (30 %).",
+      "clave": "mixta",
+      "tramos": [3, 6],
+      "consejo": "Una tercera salta una nota: de línea a línea o de espacio a espacio.",
+      "registro": {
+        "sol": { "min": 0, "max": 4 },
+        "fa": { "min": -4, "max": 0 }
+      },
+      "posicion": {
+        "tipo": "fija",
+        "anchura": 5,
+        "inicios": {
+          "sol": [0],
+          "fa": [-4]
+        }
+      },
+      "cambioDeClave": { "modo": "puente", "nota": 0 },
+      "anclas": {
+        "sol": [0, 4],
+        "fa": [-4, 0]
+      },
+      "intervalos": { "0": 10, "1": 60, "2": 30 },
+      "estrella": [2],
+      "perfil": { "intervalos": 1, "registro": 0, "direccion": 0, "patrones": 0, "manos": 1, "ritmo": 0, "continuidad": 0 },
+      "maxMismaDireccion": 4,
+      "recuperarSalto": null,
+      "maxSaltosSeguidos": null,
+      "lineas": { "sol": 1, "fa": 1 },
+      "armadura": 0,
+      "cuotaEstrella": 30,
+      "indiceDificultad": 2,
+      "notaMin": { "sol": "Do4", "fa": "Fa3" },
+      "notaMax": { "sol": "Sol4", "fa": "Do4" },
+      "cuotaSimulada": 29.7
+    },
+    {
+      "id": "sr1.5",
+      "orden": 5,
+      "titulo": "Posición móvil",
+      "resumen": "La ventana de seis notas se desplaza poco a poco por el pentagrama.",
+      "foco": "Cambios de posición",
+      "cambia": "Registro: ventana de 6 notas que se desplaza.",
+      "clave": "mixta",
+      "tramos": [3, 6],
+      "consejo": "Cuando la mano cambia de posición, localiza primero la nota nueva con tu punto de referencia más cercano.",
+      "registro": {
+        "sol": { "min": 0, "max": 8 },
+        "fa": { "min": -8, "max": 0 }
+      },
+      "posicion": {
+        "tipo": "movil",
+        "anchura": 6,
+        "inicios": {
+          "sol": [0, 1, 2, 3],
+          "fa": [-8, -7, -6, -5]
+        },
+        "cadaNotas": 8
+      },
+      "cambioDeClave": { "modo": "puente", "nota": 0 },
+      "anclas": {
+        "sol": [0, 4],
+        "fa": [-4, 0]
+      },
+      "intervalos": { "0": 10, "1": 55, "2": 35 },
+      "estrella": [2],
+      "perfil": { "intervalos": 1, "registro": 1, "direccion": 0, "patrones": 0, "manos": 1, "ritmo": 0, "continuidad": 0 },
+      "maxMismaDireccion": 4,
+      "recuperarSalto": null,
+      "maxSaltosSeguidos": null,
+      "lineas": { "sol": 1, "fa": 1 },
+      "armadura": 0,
+      "cuotaEstrella": 35,
+      "indiceDificultad": 3,
+      "notaMin": { "sol": "Do4", "fa": "Si2" },
+      "notaMax": { "sol": "Re5", "fa": "Do4" },
+      "cuotaSimulada": 34.9
+    }
+  ]
+}

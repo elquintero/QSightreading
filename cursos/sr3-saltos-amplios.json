@@ -1,0 +1,268 @@
+{
+  "esquema": 3,
+  "curso": { "id": "sr3", "nivel": 3, "etiqueta": "Nivel 3", "titulo": "Saltos amplios", "subtitulo": "Sextas, séptimas y octavas", "descripcion": "Entrenas el reconocimiento de intervalos grandes, notas en líneas adicionales y cambios de registro. Son útiles, pero conviene incorporarlos cuando los anteriores resulten cómodos.", "intervaloEstrella": "Sextas, séptimas y octavas", "rango": "registro completo", "via": "A" },
+  "defectos": {
+    "longitud": 32,
+    "armadura": 0,
+    "ritmo": null,
+    "final": "tonica",
+    "maxRepeticiones": 2,
+    "adaptativa": { "activa": true, "maxDesvio": 15 },
+    "pasa": { "precision": 0.9, "sesiones": 2 },
+    "altura": "obligatoria",
+    "entrada": {
+      "requiere": ["midi"],
+      "octava": "exacta"
+    }
+  },
+  "etapas": [
+    {
+      "id": "sr3.1",
+      "orden": 1,
+      "titulo": "Octavas y sextas",
+      "resumen": "Octavas y sextas entre segundas, con ventana móvil.",
+      "foco": "Octavas y sextas",
+      "cambia": "Intervalos: entran sextas y octavas.",
+      "clave": "mixta",
+      "tramos": [3, 6],
+      "consejo": "Una octava conserva el nombre de la nota. Una sexta es una octava menos una tercera.",
+      "registro": {
+        "sol": { "min": 0, "max": 11 },
+        "fa": { "min": -11, "max": 0 }
+      },
+      "posicion": {
+        "tipo": "movil",
+        "anchura": 10,
+        "inicios": {
+          "sol": [0, 1, 2],
+          "fa": [-11, -10, -9]
+        },
+        "cadaNotas": 8
+      },
+      "cambioDeClave": { "modo": "puente", "nota": 0 },
+      "anclas": {
+        "sol": [0, 4, 7, 11],
+        "fa": [-11, -7, -4, 0]
+      },
+      "intervalos": { "0": 4, "1": 30, "2": 8, "3": 4, "4": 4, "5": 25, "7": 25 },
+      "estrella": [5, 7],
+      "perfil": { "intervalos": 5, "registro": 3, "direccion": 0, "patrones": 0, "manos": 1, "ritmo": 0, "continuidad": 0 },
+      "maxMismaDireccion": 4,
+      "recuperarSalto": { "desde": 4, "prob": 0.8 },
+      "maxSaltosSeguidos": { "desde": 4, "max": 1 },
+      "lineas": { "sol": 1, "fa": 1 },
+      "armadura": 0,
+      "cuotaEstrella": 50,
+      "indiceDificultad": 9,
+      "notaMin": { "sol": "Do4", "fa": "Fa2" },
+      "notaMax": { "sol": "Sol5", "fa": "Do4" },
+      "cuotaSimulada": 44.1
+    },
+    {
+      "id": "sr3.2",
+      "orden": 2,
+      "titulo": "Séptimas",
+      "resumen": "Séptimas, el salto más difícil de reconocer, con apoyo de octavas y sextas.",
+      "foco": "Séptimas",
+      "cambia": "Intervalos: entran las séptimas.",
+      "clave": "mixta",
+      "tramos": [3, 6],
+      "consejo": "Una séptima es una octava menos una segunda: busca la octava y retrocede un paso.",
+      "registro": {
+        "sol": { "min": 0, "max": 11 },
+        "fa": { "min": -11, "max": 0 }
+      },
+      "posicion": {
+        "tipo": "movil",
+        "anchura": 10,
+        "inicios": {
+          "sol": [0, 1, 2],
+          "fa": [-11, -10, -9]
+        },
+        "cadaNotas": 8
+      },
+      "cambioDeClave": { "modo": "puente", "nota": 0 },
+      "anclas": {
+        "sol": [0, 4, 7, 11],
+        "fa": [-11, -7, -4, 0]
+      },
+      "intervalos": { "0": 4, "1": 26, "2": 8, "4": 4, "5": 10, "6": 38, "7": 10 },
+      "estrella": [6],
+      "perfil": { "intervalos": 6, "registro": 3, "direccion": 0, "patrones": 0, "manos": 1, "ritmo": 0, "continuidad": 0 },
+      "maxMismaDireccion": 4,
+      "recuperarSalto": { "desde": 4, "prob": 0.8 },
+      "maxSaltosSeguidos": { "desde": 4, "max": 1 },
+      "lineas": { "sol": 1, "fa": 1 },
+      "armadura": 0,
+      "cuotaEstrella": 38,
+      "indiceDificultad": 10,
+      "notaMin": { "sol": "Do4", "fa": "Fa2" },
+      "notaMax": { "sol": "Sol5", "fa": "Do4" },
+      "cuotaSimulada": 33.6
+    },
+    {
+      "id": "sr3.3",
+      "orden": 3,
+      "titulo": "Mezcla de saltos amplios",
+      "resumen": "Todos los intervalos juntos, con la ventana móvil.",
+      "foco": "Mezcla de intervalos",
+      "cambia": "Intervalos: se combinan segundas a octavas.",
+      "clave": "mixta",
+      "tramos": [3, 6],
+      "consejo": "Lee en tres pasos: contorno, primer intervalo y siguiente intervalo. No pares aunque falles.",
+      "registro": {
+        "sol": { "min": 0, "max": 11 },
+        "fa": { "min": -11, "max": 0 }
+      },
+      "posicion": {
+        "tipo": "movil",
+        "anchura": 10,
+        "inicios": {
+          "sol": [0, 1, 2],
+          "fa": [-11, -10, -9]
+        },
+        "cadaNotas": 8
+      },
+      "cambioDeClave": { "modo": "puente", "nota": 0 },
+      "anclas": {
+        "sol": [0, 4, 7, 11],
+        "fa": [-11, -7, -4, 0]
+      },
+      "intervalos": { "0": 4, "1": 28, "2": 13, "3": 9, "4": 9, "5": 11, "6": 13, "7": 13 },
+      "estrella": [5, 6, 7],
+      "perfil": { "intervalos": 7, "registro": 3, "direccion": 0, "patrones": 0, "manos": 1, "ritmo": 0, "continuidad": 0 },
+      "maxMismaDireccion": 4,
+      "recuperarSalto": { "desde": 4, "prob": 0.8 },
+      "maxSaltosSeguidos": { "desde": 4, "max": 1 },
+      "lineas": { "sol": 1, "fa": 1 },
+      "armadura": 0,
+      "cuotaEstrella": 37,
+      "indiceDificultad": 11,
+      "notaMin": { "sol": "Do4", "fa": "Fa2" },
+      "notaMax": { "sol": "Sol5", "fa": "Do4" },
+      "cuotaSimulada": 30.6
+    },
+    {
+      "id": "sr3.4",
+      "orden": 4,
+      "titulo": "Registro completo",
+      "resumen": "Los mismos intervalos de Fa2 a Sol5, sin ventana móvil.",
+      "foco": "Registro completo",
+      "cambia": "Registro: todo el pentagrama a la vez (12 notas).",
+      "clave": "mixta",
+      "tramos": [3, 6],
+      "consejo": "No busques nota por nota: ubica la zona del pentagrama y lee el intervalo desde ahí.",
+      "registro": {
+        "sol": { "min": 0, "max": 11 },
+        "fa": { "min": -11, "max": 0 }
+      },
+      "posicion": {
+        "tipo": "fija",
+        "anchura": 12,
+        "inicios": {
+          "sol": [0],
+          "fa": [-11]
+        }
+      },
+      "cambioDeClave": { "modo": "puente", "nota": 0 },
+      "anclas": {
+        "sol": [0, 4, 7, 11],
+        "fa": [-11, -7, -4, 0]
+      },
+      "intervalos": { "0": 4, "1": 28, "2": 13, "3": 9, "4": 9, "5": 11, "6": 13, "7": 13 },
+      "estrella": [5, 6, 7],
+      "perfil": { "intervalos": 7, "registro": 4, "direccion": 0, "patrones": 0, "manos": 1, "ritmo": 0, "continuidad": 0 },
+      "maxMismaDireccion": 4,
+      "recuperarSalto": { "desde": 4, "prob": 0.8 },
+      "maxSaltosSeguidos": { "desde": 4, "max": 1 },
+      "lineas": { "sol": 1, "fa": 1 },
+      "armadura": 0,
+      "cuotaEstrella": 37,
+      "indiceDificultad": 12,
+      "notaMin": { "sol": "Do4", "fa": "Fa2" },
+      "notaMax": { "sol": "Sol5", "fa": "Do4" },
+      "cuotaSimulada": 35.6
+    },
+    {
+      "id": "sr3.5",
+      "orden": 5,
+      "titulo": "Saltos entre claves",
+      "resumen": "Saltos grandes entre Sol y Fa: la melodía cambia de zona del teclado.",
+      "foco": "Cambios de registro",
+      "cambia": "Manos: el cambio de clave ya no pasa por el Do central, sino con saltos de 5ª a 10ª.",
+      "clave": "mixta",
+      "tramos": [2, 4],
+      "consejo": "Antes de saltar, identifica la clave de destino y su primera nota con el punto de referencia más cercano.",
+      "registro": {
+        "sol": { "min": 0, "max": 11 },
+        "fa": { "min": -11, "max": 0 }
+      },
+      "posicion": {
+        "tipo": "fija",
+        "anchura": 12,
+        "inicios": {
+          "sol": [0],
+          "fa": [-11]
+        }
+      },
+      "cambioDeClave": { "modo": "salto", "min": 4, "max": 9 },
+      "anclas": {
+        "sol": [0, 4, 7, 11],
+        "fa": [-11, -7, -4, 0]
+      },
+      "intervalos": { "0": 4, "1": 28, "2": 13, "3": 9, "4": 9, "5": 11, "6": 13, "7": 13 },
+      "estrella": [],
+      "perfil": { "intervalos": 7, "registro": 4, "direccion": 0, "patrones": 0, "manos": 2, "ritmo": 0, "continuidad": 0 },
+      "maxMismaDireccion": 4,
+      "recuperarSalto": { "desde": 4, "prob": 0.8 },
+      "maxSaltosSeguidos": { "desde": 4, "max": 1 },
+      "lineas": { "sol": 1, "fa": 1 },
+      "armadura": 0,
+      "cuotaEstrella": 0,
+      "indiceDificultad": 13,
+      "notaMin": { "sol": "Do4", "fa": "Fa2" },
+      "notaMax": { "sol": "Sol5", "fa": "Do4" }
+    },
+    {
+      "id": "sr3.6",
+      "orden": 6,
+      "titulo": "Líneas adicionales",
+      "resumen": "Notas con una y dos líneas adicionales, arriba y abajo, con todo lo anterior.",
+      "foco": "Líneas adicionales",
+      "cambia": "Registro: se añaden dos líneas adicionales arriba y abajo.",
+      "clave": "mixta",
+      "tramos": [2, 5],
+      "consejo": "Cuenta desde la última línea del pentagrama y apóyate en el Do central y en el Sol agudo.",
+      "registro": {
+        "sol": { "min": -3, "max": 14 },
+        "fa": { "min": -14, "max": 3 }
+      },
+      "posicion": {
+        "tipo": "fija",
+        "anchura": 18,
+        "inicios": {
+          "sol": [-3],
+          "fa": [-14]
+        }
+      },
+      "cambioDeClave": { "modo": "salto", "min": 4, "max": 9 },
+      "anclas": {
+        "sol": [0, 4, 7, 11],
+        "fa": [-11, -7, -4, 0]
+      },
+      "extremos": 0.35,
+      "intervalos": { "0": 4, "1": 28, "2": 13, "3": 9, "4": 9, "5": 11, "6": 13, "7": 13 },
+      "estrella": [],
+      "perfil": { "intervalos": 7, "registro": 5, "direccion": 0, "patrones": 0, "manos": 2, "ritmo": 0, "continuidad": 0 },
+      "maxMismaDireccion": 4,
+      "recuperarSalto": { "desde": 4, "prob": 0.8 },
+      "maxSaltosSeguidos": { "desde": 4, "max": 1 },
+      "lineas": { "sol": 2, "fa": 2 },
+      "armadura": 0,
+      "cuotaEstrella": 0,
+      "indiceDificultad": 14,
+      "notaMin": { "sol": "Sol3", "fa": "Do2" },
+      "notaMax": { "sol": "Do6", "fa": "Fa4" }
+    }
+  ]
+}

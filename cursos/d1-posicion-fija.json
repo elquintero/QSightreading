@@ -1,0 +1,243 @@
+{
+  "esquema": 3,
+  "curso": { "id": "d1", "via": "B", "nivel": 1, "etiqueta": "Dos manos · Nivel 1", "titulo": "Manos juntas en posición fija", "subtitulo": "Una mano fija, paralelo, contrario y libre", "descripcion": "Tocas con las dos manos a la vez, nota contra nota, sin mover las manos de su posición. Empiezas con una mano quieta y vas liberando la otra hasta que cada mano lee su propia línea.", "intervaloEstrella": "Relación entre manos", "rango": "5 notas por mano" },
+  "defectos": {
+    "longitud": 32,
+    "armadura": 0,
+    "ritmo": null,
+    "final": "tonica",
+    "maxRepeticiones": 2,
+    "adaptativa": { "activa": true, "maxDesvio": 15 },
+    "pasa": { "precision": 0.9, "sesiones": 2 },
+    "altura": "obligatoria",
+    "entrada": {
+      "requiere": ["midi"],
+      "octava": "exacta",
+      "orientacion": "horizontal"
+    },
+    "sincronia": { "ventanaMs": 120, "nota": "Medido con el P-145 (12 intentos): mediana 12 ms, p90 31 ms, máximo 98 ms. Se deja margen para leer con carga." },
+    "sinCruce": true
+  },
+  "etapas": [
+    {
+      "id": "d1.1",
+      "orden": 1,
+      "titulo": "La izquierda fija",
+      "resumen": "La izquierda repite Do mientras la derecha lee segundas en cinco notas.",
+      "foco": "Una mano fija",
+      "cambia": "Etapa base de dos manos.",
+      "consejo": "Toca siempre las dos notas de la columna a la vez. La mano fija es solo tu referencia.",
+      "modo": "dosManos",
+      "relacion": "fija",
+      "derecha": {
+        "registro": { "min": 0, "max": 4 },
+        "posicion": {
+          "tipo": "fija",
+          "anchura": 5,
+          "inicios": [0]
+        },
+        "intervalos": { "0": 20, "1": 80 },
+        "anclas": [0, 4]
+      },
+      "izquierda": { "fija": -7 },
+      "maxMismaDireccion": 4,
+      "perfil": {
+        "intervalos": { "derecha": 0, "izquierda": 0 },
+        "registro": { "derecha": 0, "izquierda": 0 },
+        "direccion": 0,
+        "patrones": 0,
+        "manos": 3,
+        "ritmo": 0,
+        "continuidad": 0
+      },
+      "manoFija": "izquierda",
+      "lineas": { "sol": 1, "fa": 0 },
+      "armadura": 0,
+      "indiceDificultad": 3,
+      "notaMin": { "derecha": "Do4", "izquierda": "Do3" },
+      "notaMax": { "derecha": "Sol4", "izquierda": "Do3" },
+      "cuotaSimulada": { "mueven": 0.0, "mismoSentido": 0.0, "sentidoOpuesto": 0.0 }
+    },
+    {
+      "id": "d1.2",
+      "orden": 2,
+      "titulo": "La derecha fija",
+      "resumen": "La derecha repite Sol mientras la izquierda lee segundas en cinco notas.",
+      "foco": "Una mano fija",
+      "cambia": "Variante lateral: se invierte qué mano se mueve.",
+      "consejo": "La mano izquierda lee en clave de Fa: apóyate en el Fa de la cuarta línea.",
+      "modo": "dosManos",
+      "relacion": "fija",
+      "derecha": { "fija": 4 },
+      "izquierda": {
+        "registro": { "min": -7, "max": -3 },
+        "posicion": {
+          "tipo": "fija",
+          "anchura": 5,
+          "inicios": [-7]
+        },
+        "intervalos": { "0": 20, "1": 80 },
+        "anclas": [-7, -3]
+      },
+      "maxMismaDireccion": 4,
+      "perfil": {
+        "intervalos": { "derecha": 0, "izquierda": 0 },
+        "registro": { "derecha": 0, "izquierda": 0 },
+        "direccion": 0,
+        "patrones": 0,
+        "manos": 3,
+        "ritmo": 0,
+        "continuidad": 0
+      },
+      "manoFija": "derecha",
+      "lateral": true,
+      "lineas": { "sol": 0, "fa": 0 },
+      "armadura": 0,
+      "indiceDificultad": 3,
+      "notaMin": { "derecha": "Sol4", "izquierda": "Do3" },
+      "notaMax": { "derecha": "Sol4", "izquierda": "Sol3" },
+      "cuotaSimulada": { "mueven": 0.0, "mismoSentido": 0.0, "sentidoOpuesto": 0.0 }
+    },
+    {
+      "id": "d1.3",
+      "orden": 3,
+      "titulo": "Movimiento paralelo",
+      "resumen": "Las dos manos se mueven hacia el mismo lado, o una se queda.",
+      "foco": "Movimiento paralelo",
+      "cambia": "Manos: las dos se mueven y nunca en sentidos opuestos.",
+      "consejo": "Lee la dirección una sola vez, pero lee cada nota: no copies una mano en la otra.",
+      "modo": "dosManos",
+      "relacion": "paralelo",
+      "derecha": {
+        "registro": { "min": 0, "max": 4 },
+        "posicion": {
+          "tipo": "fija",
+          "anchura": 5,
+          "inicios": [0]
+        },
+        "intervalos": { "0": 20, "1": 80 },
+        "anclas": [0, 4]
+      },
+      "izquierda": {
+        "registro": { "min": -7, "max": -3 },
+        "posicion": {
+          "tipo": "fija",
+          "anchura": 5,
+          "inicios": [-7]
+        },
+        "intervalos": { "0": 20, "1": 80 },
+        "anclas": [-7, -3]
+      },
+      "maxMismaDireccion": 4,
+      "perfil": {
+        "intervalos": { "derecha": 0, "izquierda": 0 },
+        "registro": { "derecha": 0, "izquierda": 0 },
+        "direccion": 0,
+        "patrones": 0,
+        "manos": 4,
+        "ritmo": 0,
+        "continuidad": 0
+      },
+      "lineas": { "sol": 1, "fa": 0 },
+      "armadura": 0,
+      "indiceDificultad": 4,
+      "notaMin": { "derecha": "Do4", "izquierda": "Do3" },
+      "notaMax": { "derecha": "Sol4", "izquierda": "Sol3" },
+      "cuotaSimulada": { "mueven": 63.4, "mismoSentido": 63.4, "sentidoOpuesto": 0.0 }
+    },
+    {
+      "id": "d1.4",
+      "orden": 4,
+      "titulo": "Movimiento contrario",
+      "resumen": "Las dos manos se mueven en sentidos opuestos, o una se queda.",
+      "foco": "Movimiento contrario",
+      "cambia": "Manos: las dos se mueven y nunca hacia el mismo lado.",
+      "consejo": "Las manos se abren o se cierran: mira la distancia entre ellas antes de tocar.",
+      "modo": "dosManos",
+      "relacion": "contrario",
+      "derecha": {
+        "registro": { "min": 0, "max": 4 },
+        "posicion": {
+          "tipo": "fija",
+          "anchura": 5,
+          "inicios": [0]
+        },
+        "intervalos": { "0": 20, "1": 80 },
+        "anclas": [0, 4]
+      },
+      "izquierda": {
+        "registro": { "min": -7, "max": -3 },
+        "posicion": {
+          "tipo": "fija",
+          "anchura": 5,
+          "inicios": [-7]
+        },
+        "intervalos": { "0": 20, "1": 80 },
+        "anclas": [-7, -3]
+      },
+      "maxMismaDireccion": 4,
+      "perfil": {
+        "intervalos": { "derecha": 0, "izquierda": 0 },
+        "registro": { "derecha": 0, "izquierda": 0 },
+        "direccion": 0,
+        "patrones": 0,
+        "manos": 5,
+        "ritmo": 0,
+        "continuidad": 0
+      },
+      "lineas": { "sol": 1, "fa": 0 },
+      "armadura": 0,
+      "indiceDificultad": 5,
+      "notaMin": { "derecha": "Do4", "izquierda": "Do3" },
+      "notaMax": { "derecha": "Sol4", "izquierda": "Sol3" },
+      "cuotaSimulada": { "mueven": 63.5, "mismoSentido": 0.0, "sentidoOpuesto": 63.5 }
+    },
+    {
+      "id": "d1.5",
+      "orden": 5,
+      "titulo": "Movimiento libre",
+      "resumen": "Cada mano sigue su propia línea de segundas.",
+      "foco": "Manos independientes",
+      "cambia": "Manos: cada mano sigue su propia línea.",
+      "consejo": "Lee cada pentagrama por separado y toca los dos a la vez.",
+      "modo": "dosManos",
+      "relacion": "libre",
+      "derecha": {
+        "registro": { "min": 0, "max": 4 },
+        "posicion": {
+          "tipo": "fija",
+          "anchura": 5,
+          "inicios": [0]
+        },
+        "intervalos": { "0": 20, "1": 80 },
+        "anclas": [0, 4]
+      },
+      "izquierda": {
+        "registro": { "min": -7, "max": -3 },
+        "posicion": {
+          "tipo": "fija",
+          "anchura": 5,
+          "inicios": [-7]
+        },
+        "intervalos": { "0": 20, "1": 80 },
+        "anclas": [-7, -3]
+      },
+      "maxMismaDireccion": 4,
+      "perfil": {
+        "intervalos": { "derecha": 0, "izquierda": 0 },
+        "registro": { "derecha": 0, "izquierda": 0 },
+        "direccion": 0,
+        "patrones": 0,
+        "manos": 6,
+        "ritmo": 0,
+        "continuidad": 0
+      },
+      "lineas": { "sol": 1, "fa": 0 },
+      "armadura": 0,
+      "indiceDificultad": 6,
+      "notaMin": { "derecha": "Do4", "izquierda": "Do3" },
+      "notaMax": { "derecha": "Sol4", "izquierda": "Sol3" },
+      "cuotaSimulada": { "mueven": 63.6, "mismoSentido": 31.9, "sentidoOpuesto": 31.7 }
+    }
+  ]
+}
