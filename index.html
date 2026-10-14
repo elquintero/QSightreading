@@ -56,9 +56,9 @@ const BOTTOM_SOL = 2, BOTTOM_FA = -10;
 const PENDING = 12;
 const MAX_W   = 1100;
 // ---------- constantes nuevas ----------
-const APP_NAME = "ReadNotes Lectura", APP_VER = "0.1.2", SESSION_N = 32, CLEF_GAP = 0.55;
+const APP_NAME = "ReadNotes Lectura", APP_VER = "0.1.3", SESSION_N = 32, CLEF_GAP = 0.55;
 const DEV = /[?&]dev=1\b/.test(location.search);       // ?dev=1: permite probar sin piano (rueda y teclado en pantalla)
-const SHARED = "../";                                    // carpeta de la app hermana con Sound/ y fonts/ (cámbiala si la app va en otro sitio)
+const SHARED = "";   // sound/ y fonts/ están en la raíz del repositorio (en minúscula)
 const MODE_NAME = ["Clave de sol", "Clave de fa", "Claves mezcladas", "Armaduras clave de sol", "Armaduras clave de fa", "Melodías", "Lectura"];
 const AC = {
   bg: "#212121", card: "#2a2a2a", edge: "#3c3c3c", txt: "#e2e2e2", dim: "#8d8d8d",
@@ -215,7 +215,11 @@ const gap = 3.3;
 return { first, gap, ks, fit: first + (n - 1) * gap + 4 };
 }
 const extraLines = () => Math.max(...clefsOf(playMode).map((c) => linesOf(c)));
+const gsOn = () => playMode === 6 && lecRun && lecRun.stage.clave === "mixta";          // curso de lectura con las dos claves: pauta doble
+let gsGap = 4;
+function gsExt() { const ls = lecRun.stage.lineas.sol, lf = lecRun.stage.lineas.fa; gsGap = 3.2 + ls + lf; return { up: 1.5 + ls + 4, down: gsGap + 4 + 1.5 + lf }; }
 function extents() {
+if (gsOn()) return gsExt();
 if (playMode === 5 && mel) { const b = bottomStep(0); return { up: Math.max((mel.hi - b) / 2, 4.9) + 1.0, down: Math.max((b - mel.lo) / 2, 1.4) + 1.0 }; }
 return {
 up:   Math.max(4.5 + extraLines(), 4.9) + 1.0,
@@ -223,6 +227,7 @@ down: Math.max(0.5 + extraLines(), 1.4) + 1.0
 };
 }
 function layout() {
+const SPMIN = gsOn() ? 6 : 10;
 const vv = window.visualViewport;
 const vw = Math.max(200, Math.round(vv ? vv.width  : innerWidth));
 const vh = Math.max(200, Math.round(vv ? vv.height : innerHeight));
@@ -249,14 +254,14 @@ let sp, paper, wheelD, wheelCx, wheelCy, msgX, msgY, ringR = null, kbR = null, f
 const lecOn = playMode === 6 && !DEV;                 // curso de lectura: se toca el piano, no hay rueda ni teclado en pantalla
 const kbOn = !lecOn && (land ? S.layoutL : S.layoutP) === 1;
 if (lecOn) {
-  const footH = clamp(vh * (land ? 0.3 : 0.22), 84, 190), innerW = cw - 2 * m;
+  const footH = clamp(vh * (land ? (gsOn() ? 0.2 : 0.3) : 0.22), gsOn() && land ? 64 : 84, 190), innerW = cw - 2 * m;
   if (!land) {
-    sp = clamp(innerW * SZ[S.nsize] / geo.fit, 10, 44);
-    while (sp > 10 && (bot - top) - hh - total * sp - msgH - footH - m * 2 < 0) sp -= 0.5;
+    sp = clamp(innerW * SZ[S.nsize] / geo.fit, SPMIN, 44);
+    while (sp > SPMIN && (bot - top) - hh - total * sp - msgH - footH - m * 2 < 0) sp -= 0.5;
     const free = Math.max(0, (bot - top) - hh - total * sp - msgH - footH - m * 2);
     paper = { x: cx0 + m, y: top + hh + free * 0.4, w: innerW, h: total * sp };
   } else {
-    sp = clamp(Math.min(innerW * SZ[S.nsize] / geo.fit, ((bot - top) - hh - msgH - footH - m * 2) / total), 10, 44);
+    sp = clamp(Math.min(innerW * SZ[S.nsize] / geo.fit, ((bot - top) - hh - msgH - footH - m * 2) / total), SPMIN, 44);
     const py = top + hh + Math.max(0, ((bot - footH - m) - (top + hh) - total * sp - msgH) / 2);
     paper = { x: cx0 + m, y: py, w: innerW, h: total * sp };
   }
@@ -267,13 +272,13 @@ if (lecOn) {
   const strip = S.octVerify ? clamp(Math.round(vh * 0.05), 30, 40) : 0, innerW = cw - 2 * m;
   if (!land) {
     const kbH = clamp(Math.min(vh * 0.4, cw * 1.05), 160, 560) + strip;
-    sp = clamp(innerW * SZ[S.nsize] / geo.fit, 10, 44);
-    while (sp > 10 && (bot - top) - hh - total * sp - msgH - kbH - m < 0) sp -= 0.5;
+    sp = clamp(innerW * SZ[S.nsize] / geo.fit, SPMIN, 44);
+    while (sp > SPMIN && (bot - top) - hh - total * sp - msgH - kbH - m < 0) sp -= 0.5;
     paper = { x: cx0 + m, y: top + hh, w: innerW, h: total * sp };
     kbR = { x: cx0, y: bot - kbH, w: cw, h: kbH, octs: 1, strip };
   } else {
     const kbH = clamp(vh * 0.36, 96, 240) + strip;
-    sp = clamp(Math.min(innerW * SZ[S.nsize] / geo.fit, ((bot - top) - hh - msgH - kbH - m) / total), 10, 44);
+    sp = clamp(Math.min(innerW * SZ[S.nsize] / geo.fit, ((bot - top) - hh - msgH - kbH - m) / total), SPMIN, 44);
     const py = top + hh + Math.max(0, ((bot - kbH - m) - (top + hh) - total * sp - msgH) / 2);
     paper = { x: cx0 + m, y: py, w: innerW, h: total * sp };
     kbR = { x: cx0, y: bot - kbH, w: cw, h: kbH, octs: 2, strip };
@@ -282,12 +287,12 @@ if (lecOn) {
   wheelD = 100;  wheelCx = cx0 + cw / 2;  wheelCy = kbR.y - 60;
 } else if (!land) {
 const innerW = cw - 2 * m;
-sp = clamp(innerW * SZ[S.nsize] / geo.fit, 10, 44);
+sp = clamp(innerW * SZ[S.nsize] / geo.fit, SPMIN, 44);
 const minWheel = Math.min(innerW, vh * 0.36);
 let avail;
 for (;;) {
 avail = (bot - top) - hh - total * sp - msgH - m * 2;
-if (avail >= minWheel || sp <= 10) break;
+if (avail >= minWheel || sp <= SPMIN) break;
 sp -= 0.5;
 }
 wheelD = clamp(Math.min(innerW, avail), 90, 560);
@@ -300,7 +305,7 @@ wheelCy = regionTop + (regionBot - regionTop) / 2;
 wheelD = clamp(Math.min((bot - top) - hh - m * 2, cw * 0.42), 100, 560);
 const leftW  = cw - wheelD - m * 3;
 const availH = (bot - top) - hh - msgH - m * 2;
-sp = clamp(Math.min(leftW * SZ[S.nsize] / geo.fit, availH / total), 10, 44);
+sp = clamp(Math.min(leftW * SZ[S.nsize] / geo.fit, availH / total), SPMIN, 44);
 const groupH = total * sp + msgH;
 const py = top + hh + Math.max(0, ((bot - top) - hh - groupH) / 2 - m * 0.5);
 paper = { x: cx0 + m, y: py, w: leftW, h: total * sp };
@@ -321,6 +326,7 @@ vw, vh, dpr, land, cw, cx0, top, bot, m, btnH, fs, titleFs, hh, barH, msgH, sp, 
 x0: paper.x + 0.5 * sp,
 x1: paper.x + paper.w - 0.5 * sp,
 bottomY: paper.y + ext.up * sp,
+bottomY2: gsOn() ? paper.y + (ext.up + gsGap + 4) * sp : null,
 wheel: (!kbOn && !lecOn) ? { cx: wheelCx, cy: wheelCy, rOut: ringR * 1.22, rIn: ringR * 0.2, ring: ringR }
     : { cx: wheelCx, cy: wheelCy, rOut: wheelD / 2, rIn: wheelD / 2 * 0.33 },
 msgX, msgY, kb: kbR, foot: footR,
@@ -334,7 +340,7 @@ L.gap       = geo.gap * sp;
   L.gap = span / (nv - 1);
 }
 }
-const stepY = (s, c) => L.bottomY - (s - bottomStep(c)) * L.sp * 0.5;
+const stepY = (s, c) => (c === 1 && L.bottomY2 != null ? L.bottomY2 : L.bottomY) - (s - bottomStep(c)) * L.sp * 0.5;
 const noteX = (n) => L.curX + n.slot * L.gap;
 let ac = null;
 function audio() {
@@ -357,7 +363,7 @@ osc.start(t);  osc.stop(t + dur + 0.05);
 }
 const midi = (step) => 60 + 12 * Math.floor(step / 7) + SEMITONES[mod(step, 7)];
 /* ---------- piano real: muestras mp3 en la carpeta Sound/ (una por semitono: Sound/C4.mp3, Sound/Cs4.mp3 = Do♯4...) ---------- */
-const PIANO_DIRS = [SHARED + "Sound/", SHARED + "sound/"];
+const PIANO_DIRS = [SHARED + "sound/", SHARED + "Sound/"];
 let pDir = 0;
 const SEMI_NAMES = ["C", "Cs", "D", "Ds", "E", "F", "Fs", "G", "Gs", "A", "As", "B"];
 const pianoName = (m) => SEMI_NAMES[m % 12] + (Math.floor(m / 12) - 1);       // número MIDI -> nombre de archivo (60 -> C4, 70 -> As4)
@@ -670,6 +676,7 @@ function submit(idx, kb) {
   const ok = kb ? kbOk(c, kb) : mod(c.step, 7) === lt && ((c.acc || 0) !== 0 ? ring === 1 : ring === 0);
   flashIdx = idx;  flashKey = kb ? kb.midi : -1;  flashT = 0.35;  flashOk = ok;
   if (playMode === 6) lecFb = { ok, played: kb ? kb.midi : -1, expected: noteMidiOf(c), at: now };
+  if (playMode === 6 && lecRun) devEv("a_nota", { st: lecRun.stage.id, ok, tocada: kb ? kb.midi : -1, esperada: noteMidiOf(c), ms: Math.round(now - curShownAt), i: okCount });
   if (ok) {
     c.state = 1;
     streak++;  okCount++;  bestStreak = Math.max(bestStreak, streak);
@@ -743,7 +750,7 @@ function act0(id) {
     case "t_review": if (SD) startSession(true, SD.clefs); return;
     case "update": applyUpdate(); return;
     case "upd_x": updDismissed = true; dirty = true; return;
-    case "install": case "bk_exp": case "bk_imp": return;   // se lanza en el evento click (gesto del usuario)
+    case "install": case "bk_exp": case "bk_imp": case "dev_exp": case "dev_clr": return;   // se lanza en el evento click (gesto del usuario)
     case "s_again": go(playMode === 5 && mel ? "melodies" : "clefs"); return;
     case "t_chart": ST.metric = (ST.metric + 1) % 3; dirty = true; return;
     case "t_clear":
@@ -860,6 +867,9 @@ if (updReady) rows.push({ k: "tap", label: "Nueva versión disponible", value: "
 rows.push({ k: "hd", label: "Copia de seguridad" });
 rows.push({ k: "tap", label: "Exportar estadísticas", value: sessions.length + (sessions.length === 1 ? " sesión" : " sesiones") + " · se guarda un archivo .json", id: "bk_exp" });
 rows.push({ k: "tap", label: "Importar estadísticas", value: bkMsg || "Suma las de un archivo .json a las actuales", id: "bk_imp" });
+rows.push({ k: "hd", label: "Desarrollo" });
+rows.push({ k: "tap", label: "Exportar datos de desarrollo", value: dev.msg || (dev.ev.length + " eventos · se guarda un archivo .json"), id: "dev_exp" });
+rows.push({ k: "tap", label: "Vaciar datos de desarrollo", value: "Empieza una prueba limpia con el piano", id: "dev_clr" });
 rows.push({ k: "hd", label: "Créditos" });
 rows.push({ k: "note", tight: true, small: true, label: "Diseño y Desarrollado por:  J.L Quintero" });
 rows.push({ k: "note", tight: true, label: "Piano: tonejs-instruments (N. Brosowsky), CC BY 3.0" });
@@ -940,6 +950,8 @@ const el = document.documentElement;
 if (b.id === "install") { doInstall(); break; }
 if (b.id === "bk_exp") { exportStats(); break; }
 if (b.id === "bk_imp") { importStats(); break; }
+if (b.id === "dev_exp") { exportDev(); break; }
+if (b.id === "dev_clr") { devClear(); break; }
 if (b.id === "fs_on") {
 const req = el.requestFullscreen || el.webkitRequestFullscreen;
 try { const r = req.call(el); if (r && r.catch) r.catch(() => {}); } catch (_) {}
@@ -1114,6 +1126,7 @@ let midiAccess = null, midiErr = "", midiLast = "", midiPending = false;
 const seenMidi = new Set();
 function onMidi(e) {
 const [st, note, vel] = e.data;
+devMidi(st, note, vel);
 if (st >= 0xF0) return;                              // reloj (0xF8), sensor activo (0xFE) y sistema: se descartan antes de nada
 if (scene === "midichk" && (st & 0xF0) === 0x90 && vel > 0) { lecChkNote(note);  return; }
 if (scene === "dm" && !settingsOpen && (st & 0xF0) === 0x90 && vel > 0) { dmNote(note, e.timeStamp);  return; }      // dos manos: la jugada se evalúa por columnas
@@ -1138,9 +1151,10 @@ function initMidi() {
   midiPending = true;
   navigator.requestMIDIAccess().then((a) => {
     midiAccess = a;  midiErr = "";  midiPending = false;
-    a.onstatechange = () => { bindMidi();  dirty = true;  lecMidiChanged(); };
+    a.onstatechange = () => { bindMidi();  dirty = true;  lecMidiChanged();  devEv("midi_estado", { entradas: lecInputs().map((i) => i.name) }); };
     bindMidi();  dirty = true;
   }).catch((e) => {
+    devEv("midi_error", { err: (e && e.name) || String(e) });
     midiPending = false;
     midiErr = e && (e.name === "SecurityError" || e.name === "NotAllowedError") ? "permiso denegado (actívalo en los ajustes del navegador)" : "no se pudo acceder";
     dirty = true;
@@ -1190,7 +1204,17 @@ ctx.fillStyle = C.paper;  rr(p.x, p.y, p.w, p.h, 14);  ctx.fill();
 ctx.restore();
 if (AC.light) { ctx.strokeStyle = AC.edge;  ctx.lineWidth = 1;  rr(p.x + 0.5, p.y + 0.5, p.w - 1, p.h - 1, 14);  ctx.stroke(); }
 }
+function drawGrand() {
+  const ink = AC.light ? "#2b2b2b" : "#8a8a8a", cc = AC.light ? "#111111" : "#bdbdbd", lw = Math.max(1.2, L.sp * (AC.light ? 0.09 : 0.07));
+  for (const c of [0, 1]) {
+    const b = bottomStep(c);
+    for (let i = 0; i < 5; i++) { const y = stepY(b + 2 * i, c); line(L.x0, y, L.x1, y, ink, lw); }
+    if (c === 0) glyph(G_CLEF, L.x0 + 0.45 * L.sp, stepY(b + 2, c), cc); else glyph(F_CLEF, L.x0 + 0.45 * L.sp, stepY(b + 6, c), cc);
+  }
+  line(L.x0, stepY(BOTTOM_SOL + 8, 0), L.x0, stepY(BOTTOM_FA, 1), ink, lw * 1.4);
+}
 function drawStaff() {
+if (gsOn()) { drawGrand(); return; }
 const clef = (currentNote() || { clef: lastClef }).clef;  lastClef = clef;
 const d = true, b = bottomStep(clef), lw = Math.max(1.2, L.sp * (AC.light ? 0.09 : 0.07));
 const ink = AC.light ? "#2b2b2b" : "#8a8a8a", cc = AC.light ? "#111111" : "#bdbdbd";
@@ -1265,7 +1289,7 @@ if (n.state === 1) col = n.bad > 0 ? AC.fail : NOTE;
 else if (n === cur) { col = NOTE; if (flashT > 0 && !flashOk) col = C.bad; }
 const shake = Math.sin(performance.now() * 0.05) * 0.25 * L.sp * n.shake;
 ctx.globalAlpha = alpha;
-if (n.extra > 0 && n.state === 0 && n !== cur) {
+if (n.extra > 0 && n.state === 0 && n !== cur && !gsOn()) {
 const cb = bottomStep(n.clef);
 glyph(n.clef === 0 ? G_CLEF : F_CLEF, x - 2.7 * L.sp, stepY(cb + (n.clef === 0 ? 2 : 6), n.clef), col, 2.2 * L.sp);
 }
@@ -1277,7 +1301,7 @@ const ln = notes.find((n) => n.last);
 if (ln) {
 const bx = noteX(ln) + L.gap * 0.72, ba = clamp((bx - L.leftLimit) / (1.6 * L.sp), 0, 1);
 if (ba > 0 && bx < p.x + p.w) {
-const dk = true, ink = AC.light ? "#2b2b2b" : "#9a9a9a", yb = L.bottomY, yt = L.bottomY - 4 * L.sp;
+const dk = true, ink = AC.light ? "#2b2b2b" : "#9a9a9a", yb = gsOn() ? L.bottomY2 : L.bottomY, yt = L.bottomY - 4 * L.sp;
 const thin = Math.max(1.2, L.sp * (dk ? 0.07 : 0.11)), thick = Math.max(3, L.sp * 0.42);
 ctx.globalAlpha = ba;
 line(bx, yt, bx, yb, ink, thin);
@@ -2990,6 +3014,7 @@ function lecAfter(acc, stage) {                        // al terminar: progreso 
   p.n++;  p.best = Math.max(p.best, acc);  p.streak = pass ? p.streak + 1 : 0;  p.t = Date.now();
   if (p.streak >= need) p.done = true;
   lecProg[id] = p;  lecSaveProg();
+  devEv("etapa_fin", { id, acc: Math.round(acc * 1000) / 1000, pasa: pass, racha: p.streak, superada: p.done });
   const order = lecOrderAll(), i = order.findIndex((x) => x.stage.id === id), nx = order[i + 1];
   const sameVia = nx && order[i].course.curso.via === nx.course.curso.via;      // la siguiente etapa no cruza de una vía a otra
   return { id, pass, need, thr, streak: p.streak, done: p.done, newlyDone: p.done && !was, next: sameVia ? nx.stage : null, best: p.best };
@@ -3233,6 +3258,94 @@ function drawLecFoot() {                               // pie de la partida: est
     ls.forEach((ln, i) => text(ln, r.x + r.w / 2, r.y + r.h - 14 - (ls.length - 1 - i) * (fs + 1), fs - 2, AC.dim, "center"));
   }
 }
+/* ===================== DATOS DE DESARROLLO (pruebas reales con el piano) ===================== */
+const DEV_KEY = "rnl_dev", DEV_MAX = 1500;
+const dev = { ev: [], midi: { on: 0, off: 0, reloj: 0, sensor: 0, cc: {}, otros: 0 }, since: Date.now(), msg: "" };
+let devTm = 0;
+function devLoad() {
+  try {
+    const r = JSON.parse(localStorage.getItem(DEV_KEY) || "null");
+    if (r && Array.isArray(r.ev)) { dev.ev = r.ev;  dev.midi = Object.assign(dev.midi, r.midi || {});  dev.since = r.since || dev.since; }
+  } catch (e) {}
+}
+function devSaveNow() { clearTimeout(devTm);  try { localStorage.setItem(DEV_KEY, JSON.stringify({ ev: dev.ev, midi: dev.midi, since: dev.since })); } catch (e) {} }
+function devEv(k, o) {                                  // un evento con la hora; el registro guarda los últimos DEV_MAX
+  dev.ev.push(Object.assign({ t: Date.now(), k }, o || {}));
+  if (dev.ev.length > DEV_MAX) dev.ev.splice(0, dev.ev.length - DEV_MAX);
+  clearTimeout(devTm);  devTm = setTimeout(devSaveNow, 2500);
+}
+function devMidi(st, d1, d2) {                          // contador de tráfico MIDI: no guarda mensajes uno a uno, solo cuántos hay de cada tipo
+  const m = dev.midi;
+  if (st === 0xF8) m.reloj++;
+  else if (st === 0xFE) m.sensor++;
+  else if (st >= 0xF0) m.otros++;
+  else {
+    const t = st & 0xF0;
+    if (t === 0x90) { if (d2 > 0) m.on++; else m.off++; }
+    else if (t === 0x80) m.off++;
+    else if (t === 0xB0) m.cc[d1] = (m.cc[d1] || 0) + 1;      // 64 = pedal de resonancia
+    else m.otros++;
+  }
+}
+document.addEventListener("visibilitychange", () => { if (document.hidden) devSaveNow(); });
+addEventListener("pagehide", devSaveNow);
+
+function devSummary() {
+  const q = (a, p) => (a.length ? a[Math.min(a.length - 1, Math.floor(p * a.length))] : null);
+  const med = (a) => { if (!a.length) return null; const s = a.slice().sort((x, y) => x - y), n = s.length; return n % 2 ? s[(n - 1) / 2] : (s[n / 2 - 1] + s[n / 2]) / 2; };
+  const cols = dev.ev.filter((e) => e.k === "dm_col"), good = cols.filter((e) => e.ok);
+  const sp = good.map((e) => e.spread).sort((a, b) => a - b);
+  const two = cols.filter((e) => e.tocadas && e.tocadas.length === 2).map((e) => e.spread).sort((a, b) => a - b);
+  const porEtapa = {};
+  for (const e of cols) { const o = porEtapa[e.st] || (porEtapa[e.st] = { intentos: 0, aciertos: 0, soloUnaNota: 0 }); o.intentos++; if (e.ok) o.aciertos++; if (e.parcial) o.soloUnaNota++; }
+  const an = dev.ev.filter((e) => e.k === "a_nota"), anOk = an.filter((e) => e.ok);
+  const ori = dev.ev.filter((e) => e.k === "orientacion"), fsr = dev.ev.filter((e) => e.k === "pantalla_completa");
+  return {
+    dosManos: {
+      intentosDeColumna: cols.length, aciertos: good.length, soloUnaNota: cols.filter((e) => e.parcial).length,
+      simultaneidad_ms_aciertos: { n: sp.length, mediana: med(sp), p90: q(sp, 0.9), max: sp.length ? sp[sp.length - 1] : null },
+      simultaneidad_ms_todas_las_jugadas_de_dos_notas: { n: two.length, mediana: med(two), p90: q(two, 0.9), max: two.length ? two[two.length - 1] : null },
+      porEtapa,
+    },
+    unaLinea: { notas: an.length, aciertos: anOk.length, tiempoMedianoAciertos_ms: med(anOk.map((e) => e.ms).sort((a, b) => a - b)) },
+    orientacion: { intentos: ori.length, correctos: ori.filter((e) => e.ok).length, errores: [...new Set(ori.filter((e) => !e.ok).map((e) => e.err))] },
+    pantallaCompleta: { intentos: fsr.length, correctos: fsr.filter((e) => e.ok).length, errores: [...new Set(fsr.filter((e) => !e.ok).map((e) => e.err))] },
+    pausasDosManos: dev.ev.filter((e) => e.k === "dm_pausa").map((e) => e.motivo),
+    desconexionesMidi: dev.ev.filter((e) => e.k === "midi_estado").length,
+  };
+}
+function exportDev() {
+  const d = new Date(), ymd = d.getFullYear() + String(d.getMonth() + 1).padStart(2, "0") + String(d.getDate()).padStart(2, "0");
+  const ins = [];
+  try { if (midiAccess) midiAccess.inputs.forEach((i) => ins.push({ nombre: i.name, fabricante: i.manufacturer, estado: i.state, id: i.id })); } catch (e) {}
+  const out = {
+    app: APP_NAME, tipo: "datos-de-desarrollo", formato: 1, exportado: d.toISOString(), version: APP_VER,
+    dispositivo: {
+      navegador: navigator.userAgent, https: location.protocol === "https:",
+      pwaInstalada: !!((window.matchMedia && matchMedia("(display-mode: standalone)").matches) || navigator.standalone),
+      pantalla: { vw: L.vw, vh: L.vh, dpr: L.dpr, orientacion: (screen.orientation && screen.orientation.type) || null, completa: isFs() },
+      webMidi: !!navigator.requestMIDIAccess, wakeLock: "wakeLock" in navigator, entradasMidi: ins,
+    },
+    ajustes: { midi: S.midi, piano: S.piano, sonido: S.sound, volumen: S.vol, octavas: S.octVerify, tema: S.skin, nsize: S.nsize, layoutP: S.layoutP, layoutL: S.layoutL },
+    registroDesde: new Date(dev.since).toISOString(),
+    traficoMidi: dev.midi,
+    resumen: devSummary(),
+    progreso: lecProg,
+    sesionesUnaLinea: sessions.filter((s) => s.m === 6 || s.st).slice(-30),
+    eventos: dev.ev,
+  };
+  const blob = new Blob([JSON.stringify(out)], { type: "application/json" }), a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);  a.download = "readnotes-desarrollo-" + ymd + ".json";
+  document.body.appendChild(a);  a.click();
+  setTimeout(() => { URL.revokeObjectURL(a.href);  a.remove(); }, 1500);
+  dev.msg = dev.ev.length + " eventos guardados en el archivo";  dirty = true;
+}
+function devClear() {
+  dev.ev = [];  dev.midi = { on: 0, off: 0, reloj: 0, sensor: 0, cc: {}, otros: 0 };  dev.since = Date.now();
+  devSaveNow();  dev.msg = "Registro vaciado";  dirty = true;
+}
+devLoad();
+
 /* ===================== VÍA B · DOS MANOS (columnas nota contra nota) ===================== */
 let bravOk = false;
 function dmFont() {                                    // el @font-face está al final del documento: se pide la fuente cuando la página ya cargó
@@ -3353,16 +3466,26 @@ function dmStart(f) {
   };
   dm.exp = cols.map((c) => ({ derecha: midi(c.der), izquierda: midi(c.izq) }));
   lecSel = { course: f.course.curso.id, stage: st.id };
+  devEv("dm_inicio", { st: st.id, vp: [L.vw, L.vh], completa: isFs(), ori: (screen.orientation && screen.orientation.type) || null });
   if (!bravOk) dmFont();
   dmLock();                                            // se llama dentro del toque del usuario: Chrome lo exige para girar la pantalla
   go("dm");
 }
 function dmLock() {
-  const lock = () => { try { screen.orientation.lock("landscape").then(onResize, onResize); } catch (e) {} };
+  const lock = () => {
+    try {
+      screen.orientation.lock("landscape").then(
+        () => { devEv("orientacion", { ok: true, tipo: screen.orientation.type });  onResize(); },
+        (e) => { devEv("orientacion", { ok: false, err: (e && e.name) || String(e) });  onResize(); });
+    } catch (e) { devEv("orientacion", { ok: false, err: "sin API: " + ((e && e.name) || e) }); }
+  };
   try {
-    if (!isFs() && fsSupported()) { const el = document.documentElement, r = (el.requestFullscreen || el.webkitRequestFullscreen).call(el); if (r && r.then) r.then(lock, lock); else lock(); }
-    else lock();
-  } catch (e) { lock(); }
+    if (!isFs() && fsSupported()) {
+      const el = document.documentElement, r = (el.requestFullscreen || el.webkitRequestFullscreen).call(el);
+      if (r && r.then) r.then(() => { devEv("pantalla_completa", { ok: true });  lock(); }, (e) => { devEv("pantalla_completa", { ok: false, err: (e && e.name) || String(e) });  lock(); });
+      else lock();
+    } else lock();
+  } catch (e) { devEv("pantalla_completa", { ok: false, err: (e && e.name) || String(e) });  lock(); }
 }
 function dmLeave() {
   if (!dm) return;
@@ -3388,6 +3511,7 @@ function dmEval() {
   if (!buf.length) return;
   const exp = d.exp[d.i], r = dmEvalColumna(exp, buf, d.win), now = performance.now();
   dirty = true;
+  devEv("dm_col", { st: d.stage.id, i: d.i, esp: [exp.izquierda, exp.derecha], tocadas: buf.map((b) => [b.nota, Math.round(b.t - buf[0].t)]), spread: Math.round(r.spread), ok: r.ok, parcial: buf.length < 2, ms: Math.round(buf[0].t - d.tShow) });
   if (r.ok) {
     if (!d.failedThis) d.firstTry++;
     for (const h of ["derecha", "izquierda"]) if (!d.handFail[h]) d.hand[h]++;
@@ -3438,8 +3562,8 @@ function dmNoteAt(g, step, clef, x, col) {
   if (up) { ctx.moveTo(x + sp * 0.58, y - sp * 0.1);  ctx.lineTo(x + sp * 0.58, y - sp * 3.2); } else { ctx.moveTo(x - sp * 0.58, y + sp * 0.1);  ctx.lineTo(x - sp * 0.58, y + sp * 3.2); }
   ctx.stroke();  ctx.restore();
 }
-function dmTrack(d, blocked, now) {                    // el tiempo de pausa (piano desconectado o móvil en vertical) no cuenta como tiempo de lectura
-  if (blocked && !d.pausedSince) { d.pausedSince = now;  clearTimeout(d.timer);  d.buf = []; }
+function dmTrack(d, blocked, now, why) {               // el tiempo de pausa (piano desconectado o móvil en vertical) no cuenta como tiempo de lectura
+  if (blocked && !d.pausedSince) { d.pausedSince = now;  clearTimeout(d.timer);  d.buf = [];  devEv("dm_pausa", { motivo: why || "?", st: d.stage.id, i: d.i }); }
   else if (!blocked && d.pausedSince) { d.tShow += now - d.pausedSince;  d.pausedSince = 0; }
 }
 function drawDM() {
@@ -3448,7 +3572,7 @@ function drawDM() {
   drawBar(d ? d.stage.id.replace(/^[a-z]+/, "") + " · " + d.stage.titulo : "Dos manos", { back: "back", actions: [{ id: "dm_reset", icon: "reset" }, { id: "open", icon: "gear" }] });
   if (!d) return;
   const g = dmLayout(), sp = g.sp, now = performance.now(), disc = !lecMidiOk(), portrait = L.vw < L.vh;
-  dmTrack(d, disc || portrait, now);
+  dmTrack(d, disc || portrait, now, disc ? "desconectado" : "vertical");
   // progreso y marcador, como en la partida de una línea
   const live = d.i + (d.failedThis ? 1 : 0), acc = live ? d.firstTry / live : 1;
   const stat = "Columna " + Math.min(d.i + 1, d.n) + "/" + d.n + " | Fallos: " + d.fails + " | Precisión: " + Math.round(acc * 100) + "%";
