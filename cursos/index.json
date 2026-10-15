@@ -1,6 +1,6 @@
 {
   "esquema": 3,
-  "version": "1.3.0",
+  "version": "1.3.1",
   "menu": { "id": "lectura", "titulo": "Lectura a primera vista", "descripcion": "Entrena la lectura de partituras de piano por intervalos y con las dos manos, de lo cercano a lo amplio. Requiere un teclado MIDI." },
   "cursos": [
     { "id": "sr1", "archivo": "sr1-notas-cercanas.json", "nivel": 1, "etiqueta": "Nivel inicial", "titulo": "Notas cercanas", "subtitulo": "Segundas y primeras terceras", "etapas": 5, "via": "A" },
@@ -24,21 +24,21 @@
       "estado": "activa",
       "pregunta": "¿Qué distancias entre notas aparecen?",
       "niveles": ["Repeticiones y segundas", "+ terceras (30 %)", "Terceras dominantes (60 %)", "+ cuartas y quintas", "Mezcla de segundas a quintas", "+ sextas y octavas", "+ séptimas", "Mezcla de segundas a octavas"],
-      "nota": "En la vía B el nivel se mide por mano (derecha, izquierda)."
+      "nota": "En «Dos manos a la vez» el nivel se mide por mano (derecha, izquierda)."
     },
     "registro": {
       "nombre": "Registro",
       "estado": "activa",
       "pregunta": "¿Cuánto pentagrama hay que dominar a la vez?",
       "niveles": ["5 notas fijas", "6 notas, ventana móvil", "Octava fija", "10 notas, ventana móvil (12 en total)", "Registro completo sin líneas adicionales", "Con dos líneas adicionales"],
-      "nota": "En la vía B el nivel se mide por mano (derecha, izquierda)."
+      "nota": "En «Dos manos a la vez» el nivel se mide por mano (derecha, izquierda)."
     },
     "manos": {
       "nombre": "Coordinación de manos",
       "estado": "activa",
       "pregunta": "¿Cómo se reparte la lectura entre las manos?",
       "niveles": ["Una mano (una clave)", "Alterna manos pasando por el Do central", "Alterna manos con saltos entre registros", "Dos manos, una de ellas fija", "Dos manos en movimiento paralelo", "Dos manos en movimiento contrario", "Dos manos libres e independientes"],
-      "nota": "Los niveles 0 a 2 son de la vía A. Los niveles 3 a 6 son de la vía B."
+      "nota": "Los niveles 0 a 2 son de «Lectura por intervalos». Los niveles 3 a 6 son de «Dos manos a la vez»."
     },
     "direccion": {
       "nombre": "Dirección melódica",
@@ -70,8 +70,8 @@
       "precision": { "estado": "activa", "definicion": "Notas acertadas a la primera dividido entre notas de la sesión." },
       "tiempoRespuesta": { "estado": "activa", "definicion": "Mediana de milisegundos por nota, global y por intervalo." },
       "continuidad": { "estado": "planificada", "definicion": "Con pulso: porcentaje de notas leídas en su pulso sin detenerse. En modo libre: regularidad del tiempo entre notas." },
-      "dificultad": { "estado": "activa", "definicion": "Índice de la etapa = suma de los niveles de su perfil (en la vía B se suman los de ambas manos). Se guarda con cada sesión." },
-      "precisionPorMano": { "estado": "activa en la vía B", "definicion": "Columnas en las que esa mano tocó su nota correcta, dividido entre columnas de la sesión." }
+      "dificultad": { "estado": "activa", "definicion": "Índice de la etapa = suma de los niveles de su perfil (en «Dos manos a la vez» se suman los de ambas manos). Se guarda con cada sesión." },
+      "precisionPorMano": { "estado": "activa en «Dos manos a la vez»", "definicion": "Columnas en las que esa mano tocó su nota correcta, dividido entre columnas de la sesión." }
     },
     "porIntervalo": true
   },
@@ -103,7 +103,7 @@
   "vias": [
     {
       "id": "A",
-      "titulo": "Una línea",
+      "titulo": "Lectura por intervalos",
       "descripcion": "Una mano por pentagrama, o ambas alternando.",
       "cursos": ["sr1", "sr2", "sr3"],
       "requiere": ["midi"],
@@ -111,19 +111,19 @@
     },
     {
       "id": "B",
-      "titulo": "Dos manos",
+      "titulo": "Dos manos a la vez",
       "descripcion": "Las dos manos a la vez, nota contra nota.",
       "cursos": ["d1", "d2", "d3"],
       "requiere": ["midi", "horizontal"],
-      "desbloqueo": { "curso": "sr1", "etapa": "sr1.5", "texto": "Se abre al superar el Nivel inicial de la vía A." }
+      "desbloqueo": { "curso": "sr1", "etapa": "sr1.5", "texto": "Se abre al superar el Nivel inicial de «Lectura por intervalos»." }
     },
     {
       "id": "C",
-      "titulo": "Ritmo",
+      "titulo": "Ritmo y pulso",
       "descripcion": "Valores rítmicos con metrónomo, con notas fáciles de una mano.",
       "cursos": ["sr5"],
       "requiere": ["midi"],
-      "desbloqueo": { "curso": "sr1", "etapa": "sr1.5", "texto": "Se abre al superar el Nivel inicial de la vía A." }
+      "desbloqueo": { "curso": "sr1", "etapa": "sr1.5", "texto": "Se abre al superar el Nivel inicial de «Lectura por intervalos»." }
     }
   ],
   "requisitos": {
