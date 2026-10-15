@@ -56,7 +56,7 @@ const BOTTOM_SOL = 2, BOTTOM_FA = -10;
 const PENDING = 12;
 const MAX_W   = 1100;
 // ---------- constantes nuevas ----------
-const APP_NAME = "ReadNotes Lectura", APP_VER = "0.1.5", SESSION_N = 32, CLEF_GAP = 0.55;
+const APP_NAME = "ReadNotes Lectura", APP_VER = "0.1.6", SESSION_N = 32, CLEF_GAP = 0.55;
 const DEV = /[?&]dev=1\b/.test(location.search);       // ?dev=1: permite probar sin piano (rueda y teclado en pantalla)
 const SHARED = "";   // sound/ y fonts/ están en la raíz del repositorio (en minúscula)
 const MODE_NAME = ["Clave de sol", "Clave de fa", "Claves mezcladas", "Armaduras clave de sol", "Armaduras clave de fa", "Melodías", "Lectura"];
@@ -544,8 +544,8 @@ function pickStep(clef) {
 }
 function makeNote(prev) {
   if (playMode === 6 && lecRun) {
-    const m = lecRun.notes[generated++], extra = prev && prev.clef !== m.clef ? CLEF_GAP : 0, t = prev ? prev.tslot + 1 + extra : 0;
-    return { step: m.step, clef: m.clef, extra, slot: t, tslot: t, state: 0, shake: 0, last: generated === lecRun.notes.length, acc: 0, iv: m.iv };
+    const m = lecRun.notes[generated++], extra = prev && prev.clef !== m.clef ? CLEF_GAP : 0, t = prev ? prev.tslot + lecSpace(prev.beats) + extra : 0;
+    return { step: m.step, clef: m.clef, extra, slot: t, tslot: t, state: 0, shake: 0, last: generated === lecRun.notes.length, acc: 0, iv: m.iv, beats: m.beats, beat: m.beat, bar: !!m.bar };
   }
   if (playMode === 5 && mel) {
     const m = mel.notes[generated++], t = prev ? prev.tslot + 1 : 0;
@@ -689,11 +689,13 @@ function advanceNotes(now) {                                       // tras tocar
 }
 /* ---------- metrónomo de Lectura: una nota por pulso; si no llegas a tiempo, la lectura sigue sin esperarte ---------- */
 function pulseInit() {
-  if (!S.pulse || playMode !== 6) { pulse = null;  return; }
-  const P = 60000 / S.pulse, now = performance.now();
+  const rit = playMode === 6 && lecRun && lecRun.stage.ritmo, bpm = S.pulse || (rit && rit.bpm) || 0;     // las etapas de ritmo llevan siempre metrónomo
+  if (!bpm || playMode !== 6) { pulse = null;  return; }
+  const P = 60000 / bpm, now = performance.now();
   pulse = { P, t0: now + 4 * P + 300, sched: -4, lastT: now };     // 4 pulsos de cuenta atrás y empieza la primera nota
-  msg = "Cuenta atrás: 4 pulsos · una nota por pulso";  msgOk = true;  msgT = 3;
+  msg = rit ? "Cuenta atrás: 4 pulsos · negra = 1 pulso · blanca = 2" : "Cuenta atrás: 4 pulsos · una nota por pulso";  msgOk = true;  msgT = 3;
 }
+const pulseDue = (n) => pulse.t0 + (n && typeof n.beat === "number" ? n.beat : okCount + missCount) * pulse.P;     // pulso en que debe sonar la nota
 function pulseMiss(c, now) {                                       // el pulso de esta nota ha pasado sin acierto: se da por perdida y se sigue leyendo
   const row = [c.clef, c.step, curBad + (curBad ? 0 : 1), Math.round(pulse.P), c.iv === undefined ? null : c.iv, null, 1];
   c.state = 2;  c.bad = row[2];  missCount++;  badCount++;  streak = 0;
@@ -713,7 +715,7 @@ function pulseTick(now) {
     pl.sched++;
   }
   const c = currentNote();
-  if (c && now > pl.t0 + (okCount + missCount) * pl.P + pl.P * 0.5) pulseMiss(c, now);
+  if (c && now > pulseDue(c) + pl.P * 0.5) pulseMiss(c, now);
 }
 function drawPulse() {
   if (!pulse || settingsOpen || playMode !== 6) return;
@@ -739,7 +741,7 @@ function submit(idx, kb) {
   const now = performance.now();
   let pOff = null;
   if (pulse && playMode === 6) {                                    // con pulso: la nota vale dentro de su pulso (±media pulsación); antes de abrirse la ventana se espera
-    const due = pulse.t0 + (okCount + missCount) * pulse.P;
+    const due = pulseDue(c);
     if (now < due - pulse.P * 0.5) { msg = "Espera el pulso";  msgOk = false;  msgT = 0.8;  return; }
     pOff = Math.round(now - due);
   }
@@ -1349,10 +1351,18 @@ if (hold && hold.note === cur) {                    // melodías: la columna se 
   ctx.fillRect(noteX(cur) - L.gap * 0.42, p.y + 6 + hh2 * (1 - f), L.gap * 0.84, hh2 * f);
 }
 if (pulse && playMode === 6) {                      // barra de tiempo: se llena durante el pulso de esta nota
-  const pr = clamp((performance.now() - (pulse.t0 + (okCount + missCount) * pulse.P - pulse.P * 0.5)) / pulse.P, 0, 1);
+  const pr = clamp((performance.now() - (pulseDue(cur) - pulse.P * 0.5)) / pulse.P, 0, 1);
   ctx.fillStyle = pr > 0.8 ? AC.fail : AC.accT;
   ctx.fillRect(noteX(cur) - L.gap * 0.4, p.y, L.gap * 0.8 * pr, 4);
 }
+}
+if (playMode === 6) for (let i = 1; i < notes.length; i++) {         // líneas de compás (etapas de ritmo)
+  const nb = notes[i];
+  if (!nb.bar) continue;
+  const bx = (noteX(notes[i - 1]) + noteX(nb)) / 2, ba = clamp((bx - L.leftLimit) / (1.6 * L.sp), 0, 1);
+  if (ba <= 0 || bx > p.x + p.w) continue;
+  const ink = AC.light ? "#2b2b2b" : "#9a9a9a", yb = gsOn() ? L.bottomY2 : L.bottomY, yt = L.bottomY - 4 * L.sp;
+  ctx.globalAlpha = ba;  line(bx, yt, bx, yb, ink, Math.max(1.2, L.sp * 0.07));  ctx.globalAlpha = 1;
 }
 for (const n of notes) {
 const x = noteX(n);
@@ -3028,7 +3038,7 @@ function lecOrderA() {                                 // etapas de la vía A en
 function lecOrderAll() {                               // vía A y vía B, cada una en su orden
   const out = [];
   if (!lec.index) return out;
-  for (const via of ["A", "B"]) for (const c of lec.index.cursos) {
+  for (const via of ["A", "B", "C"]) for (const c of lec.index.cursos) {
     if (c.via !== via) continue;
     const crs = lec.courses[c.id];
     if (crs) for (const e of crs.etapas) { const s2 = lecHandStage(lecStageFull(crs, e)); if (s2) out.push({ course: crs, stage: s2 }); }
@@ -3036,14 +3046,17 @@ function lecOrderAll() {                               // vía A y vía B, cada 
   return out;
 }
 const lecFind = (id) => lecOrderAll().find((x) => x.stage.id === id) || null;
-const lecViaB = () => (lec.index && lec.index.vias && lec.index.vias.find((v) => v.id === "B")) || null;
-const lecFirstB = () => (lec.index && lec.index.cursos.find((c) => c.via === "B")) || null;
+const lecViaDef = (v) => (lec.index && lec.index.vias && lec.index.vias.find((x) => x.id === v)) || null;
+const lecFirstVia = (v) => (lec.index && lec.index.cursos.find((c) => c.via === v)) || null;
 const lecDone = (id) => !!(lecProg[id] && lecProg[id].done);
 function lecUnlocked(i, order) {
-  const c0 = order[i].course.curso, fb = lecFirstB();
-  if (fb && c0.id === fb.id && order[i].stage.orden === 1) {       // la vía B se abre al superar la etapa que indica index.json (sr1.5)
-    const vb = lecViaB(), need = (vb && vb.desbloqueo && vb.desbloqueo.etapa) || "sr1.5";
-    return lecDone(need) || !!lecOpen[c0.id];
+  const c0 = order[i].course.curso;
+  for (const v of ["B", "C"]) {                                   // las vías B (dos manos) y C (ritmo) se abren al superar la etapa que indica index.json (sr1.5)
+    const fv = lecFirstVia(v);
+    if (fv && c0.id === fv.id && order[i].stage.orden === 1) {
+      const vd = lecViaDef(v), need = (vd && vd.desbloqueo && vd.desbloqueo.etapa) || "sr1.5";
+      return lecDone(need) || !!lecOpen[c0.id];
+    }
   }
   if (i === 0 || lecDone(order[i - 1].stage.id)) return true;
   const cid = order[i].course.curso.id;                 // "abrir de todos modos": se abre la primera etapa del nivel
@@ -3080,6 +3093,25 @@ function lecIntervalStats(id) {                        // fallos por intervalo e
   }
   return stats;
 }
+function lecRhythm(st, seq) {                          // reparte negras/blancas (valores en pulsos) en compases completos; la última nota cierra
+  const r = st.ritmo, per = 4, vals = Object.keys(r.valores).map(Number);
+  let pos = 0, beat = 0;
+  seq.forEach((n, i) => {
+    const rem = per - pos, last = i === seq.length - 1;
+    let b;
+    if (last) b = Math.min(rem, Math.max(...vals.filter((v) => v <= 2)));          // final: la figura más larga que quepa (máx. blanca)
+    else {
+      const opts = vals.filter((v) => v <= rem + 1e-9), tot = opts.reduce((a, v) => a + r.valores[String(v)], 0);
+      let x = Math.random() * tot;
+      b = opts[opts.length - 1];
+      for (const v of opts) { x -= r.valores[String(v)]; if (x <= 0) { b = v;  break; } }
+    }
+    n.beats = b;  n.beat = beat;  n.bar = pos === 0 && i > 0;
+    pos += b;  beat += b;
+    if (pos >= per - 1e-9) pos = 0;
+  });
+}
+const lecSpace = (b) => (!b ? 1 : b >= 4 ? 2.6 : b >= 2 ? 1.7 : b >= 1 ? 1 : 0.75);     // separación horizontal según la duración de la nota anterior
 function lecStart(id) {
   const f = lecFind(id);
   if (!f) return;
@@ -3088,6 +3120,7 @@ function lecStart(id) {
   initMidi();
   if (f.stage.modo === "dosManos") { dmStart(f);  return; }
   const st = f.stage, seq = LecGen.generate(st, { dist: LecGen.adaptDist(st, lecIntervalStats(id)) });
+  if (st.ritmo) lecRhythm(st, seq);
   lecRun = { stage: st, course: f.course, title: st.id + " · " + st.titulo, notes: seq };
   lecSel = { course: f.course.curso.id, stage: id };
   playMode = 6;  reviewOn = false;  curKey = null;  reviewPool = [];  wmap = new Map();  lecFb = null;  lecDisc = false;
@@ -3239,9 +3272,9 @@ function drawLec() {
       visHit("lec_cont", x, y, w, bh, top);
       y += bh + 18;
     } else { text("¡Vía A completada!", cx, y + 16, fs + 2, AC.ok, "center", "bold", w);  y += 42; }
-    for (const via of ["A", "B"]) {
+    for (const via of ["A", "B", "C"]) {
       if (S.hand && via === "B") { text("VÍA B · DOS MANOS: no disponible con una sola mano", x + 4, y + 8, fs - 1, AC.dim, "left", "bold", w);  y += 30;  continue; }
-      text(via === "A" ? "VÍA A · UNA LÍNEA" : "VÍA B · DOS MANOS", x + 4, y + 8, fs, AC.accT, "left", "bold", w);
+      text(via === "A" ? "VÍA A · UNA LÍNEA" : via === "B" ? "VÍA B · DOS MANOS" : "VÍA C · RITMO", x + 4, y + 8, fs, AC.accT, "left", "bold", w);
       y += 26;
       for (const c of lec.index.cursos.filter((q) => q.via === via && lecOrderAll().some((o) => o.course.curso.id === q.id))) y = lecCourseRow(x, y, w, c, top);
       y += 6;
@@ -3262,8 +3295,8 @@ function drawLecNivel() {
   const order = lecOrderAll();
   if (lecCourseLocked(lecSel.course)) {
     const bh = 48, sure = lecConfirm.id === "lec_open" && performance.now() - lecConfirm.t < 3500;
-    const fb = lecFirstB(), vb = lecViaB();
-    text(fb && vb && lecSel.course === fb.id && vb.desbloqueo ? vb.desbloqueo.texto : "Este nivel se abre al superar el anterior.", x + 4, y + 8, fs, AC.mid, "left", "bold", w);
+    const fv = lecFirstVia(crs.curso.via), vd = lecViaDef(crs.curso.via);
+    text(fv && vd && crs.curso.via !== "A" && lecSel.course === fv.id && vd.desbloqueo ? vd.desbloqueo.texto : "Este nivel se abre al superar el anterior.", x + 4, y + 8, fs, AC.mid, "left", "bold", w);
     y += 26;
     actionBtn(x, y, w, bh, sure ? "Toca otra vez para confirmar" : "Abrir de todos modos", sure, hoverBtn === "lec_open");
     visHit("lec_open", x, y, w, bh, top);

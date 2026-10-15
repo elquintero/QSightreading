@@ -2,7 +2,7 @@
    Cambia VERSION en cada publicación: así el móvil detecta la nueva versión y muestra el aviso.
    IMPORTANTE: todas las cachés de esta app empiezan por "lectura-". Las de la app hermana empiezan por "readnotes-"
    y su service worker borra las que no conoce, así que no se deben mezclar los prefijos. */
-const VERSION = "0.1.5";
+const VERSION = "0.1.6";
 const CACHE = "lectura-" + VERSION;
 const CURSOS = "lectura-cursos";           // cursos (JSON): se conservan entre versiones
 const SOUND = "readnotes-sound";           // muestras de piano de la app hermana: se comparten y aquí nunca se borran
@@ -10,7 +10,7 @@ const ASSETS = [
   "./", "index.html", "manifest.webmanifest",
   "icons/icon-192.png", "icons/icon-512.png", "icons/icon-maskable-512.png", "icons/apple-touch-icon.png", "icons/favicon-32.png",
   "cursos/index.json", "cursos/sr1-notas-cercanas.json", "cursos/sr2-saltos-moderados.json", "cursos/sr3-saltos-amplios.json",
-  "cursos/d1-posicion-fija.json", "cursos/d2-mas-intervalos.json", "cursos/d3-cambios-de-posicion.json"
+  "cursos/d1-posicion-fija.json", "cursos/d2-mas-intervalos.json", "cursos/d3-cambios-de-posicion.json", "cursos/sr5-ritmo.json"
 ];
 // Opcionales (viven en la app hermana): si faltan no deben romper la instalación
 const OPTIONAL = ["fonts/Bravura.otf", "Fonts/Bravura.otf"];
