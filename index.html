@@ -9,6 +9,22 @@
 <meta name="theme-color" content="#2a6f86">
 <meta name="apple-mobile-web-app-title" content="Lectura">
 <meta name="description" content="ReadNotes: aprende a leer notas musicales en clave de sol y de fa.">
+<script>
+/* Autorrecuperación: si la app no ha arrancado en 15 s (p. ej. móvil recién despierto con la red inestable y la página llegó cortada),
+   se recarga sola. Máximo 2 veces seguidas; al arrancar bien se borra el contador. Además la pantalla de carga se quita siempre. */
+(function () {
+  var KEY = "rnl_autoreload", n = 0, t = 0, tm, ts;
+  try { var r = JSON.parse(localStorage.getItem(KEY) || "{}"); n = r.n || 0; t = r.t || 0; } catch (e) {}
+  if (Date.now() - t > 120000) n = 0;                                 // intentos antiguos no cuentan
+  window.__rnlOk = function () { clearTimeout(tm);  try { localStorage.removeItem(KEY); } catch (e) {} };
+  tm = setTimeout(function () {
+    if (n >= 2) return;
+    try { localStorage.setItem(KEY, JSON.stringify({ n: n + 1, t: Date.now() })); } catch (e) {}
+    location.reload();
+  }, 15000);
+  ts = setTimeout(function () { var s = document.getElementById("splash"); if (s && s.parentNode) s.parentNode.removeChild(s); }, 12000);   // último recurso
+})();
+</script>
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="preload" href="fonts/Bravura.otf" as="font" type="font/otf" crossorigin>
 <link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png">
@@ -56,7 +72,7 @@ const BOTTOM_SOL = 2, BOTTOM_FA = -10;
 const PENDING = 12;
 const MAX_W   = 1100;
 // ---------- constantes nuevas ----------
-const APP_NAME = "ReadNotes Lectura", APP_VER = "0.1.6", SESSION_N = 32, CLEF_GAP = 0.55;
+const APP_NAME = "ReadNotes Lectura", APP_VER = "0.1.7", SESSION_N = 32, CLEF_GAP = 0.55;
 const DEV = /[?&]dev=1\b/.test(location.search);       // ?dev=1: permite probar sin piano (rueda y teclado en pantalla)
 const SHARED = "";   // sound/ y fonts/ están en la raíz del repositorio (en minúscula)
 const MODE_NAME = ["Clave de sol", "Clave de fa", "Claves mezcladas", "Armaduras clave de sol", "Armaduras clave de fa", "Melodías", "Lectura"];
@@ -3271,10 +3287,10 @@ function drawLec() {
       actionBtn(x, y, w, bh, "Continuar · " + st.id.replace(/^[a-z]+/, "") + " " + st.titulo, true, hoverBtn === "lec_cont");
       visHit("lec_cont", x, y, w, bh, top);
       y += bh + 18;
-    } else { text("¡Vía A completada!", cx, y + 16, fs + 2, AC.ok, "center", "bold", w);  y += 42; }
+    } else { text("¡Lectura por intervalos completada!", cx, y + 16, fs + 2, AC.ok, "center", "bold", w);  y += 42; }
     for (const via of ["A", "B", "C"]) {
-      if (S.hand && via === "B") { text("VÍA B · DOS MANOS: no disponible con una sola mano", x + 4, y + 8, fs - 1, AC.dim, "left", "bold", w);  y += 30;  continue; }
-      text(via === "A" ? "VÍA A · UNA LÍNEA" : via === "B" ? "VÍA B · DOS MANOS" : "VÍA C · RITMO", x + 4, y + 8, fs, AC.accT, "left", "bold", w);
+      if (S.hand && via === "B") { text("DOS MANOS A LA VEZ: no disponible con una sola mano", x + 4, y + 8, fs - 1, AC.dim, "left", "bold", w);  y += 30;  continue; }
+      text(via === "A" ? "LECTURA POR INTERVALOS" : via === "B" ? "DOS MANOS A LA VEZ" : "RITMO Y PULSO", x + 4, y + 8, fs, AC.accT, "left", "bold", w);
       y += 26;
       for (const c of lec.index.cursos.filter((q) => q.via === via && lecOrderAll().some((o) => o.course.curso.id === q.id))) y = lecCourseRow(x, y, w, c, top);
       y += 6;
@@ -3884,9 +3900,12 @@ const boot = () => {
     setP(0.85, okFont ? "Preparando…" : "No se encontró fonts/Bravura.otf: se usa una fuente de reserva");
     const wait = Math.max(0, (okFont ? 900 : 2400) - (performance.now() - t0));      // el logo se ve al menos ~1 s
     setTimeout(() => {
-      start();
-      setP(1, "");
-      if (sp) { sp.classList.add("off");  setTimeout(() => { if (sp.parentNode) sp.parentNode.removeChild(sp); }, 450); }
+      try { start();  if (window.__rnlOk) window.__rnlOk(); }         // arrancó bien: se anula la recarga automática
+      catch (e) { console.error("Error al arrancar", e); }
+      finally {                                                       // la pantalla de carga se quita siempre, aunque falle el arranque
+        try { setP(1, ""); } catch (e2) {}
+        if (sp) { sp.classList.add("off");  setTimeout(() => { if (sp.parentNode) sp.parentNode.removeChild(sp); }, 450); }
+      }
     }, wait);
   });
 };

@@ -2,7 +2,7 @@
    Cambia VERSION en cada publicación: así el móvil detecta la nueva versión y muestra el aviso.
    IMPORTANTE: todas las cachés de esta app empiezan por "lectura-". Las de la app hermana empiezan por "readnotes-"
    y su service worker borra las que no conoce, así que no se deben mezclar los prefijos. */
-const VERSION = "0.1.6";
+const VERSION = "0.1.7";
 const CACHE = "lectura-" + VERSION;
 const CURSOS = "lectura-cursos";           // cursos (JSON): se conservan entre versiones
 const SOUND = "readnotes-sound";           // muestras de piano de la app hermana: se comparten y aquí nunca se borran
@@ -14,6 +14,12 @@ const ASSETS = [
 ];
 // Opcionales (viven en la app hermana): si faltan no deben romper la instalación
 const OPTIONAL = ["fonts/Bravura.otf", "Fonts/Bravura.otf"];
+
+// ¿Llegó la página completa? Código 200 y el cuerpo leído hasta el final, terminando en </html> (si se corta a medias, falla o no termina así).
+async function pageOk(res) {
+  if (!res || res.status !== 200) return false;
+  try { return /<\/html>\s*$/i.test(await res.clone().text()); } catch (err) { return false; }
+}
 
 self.addEventListener("install", (e) => {
   // Sin skipWaiting automático: la app avisa y el usuario decide cuándo actualizar
@@ -39,9 +45,15 @@ self.addEventListener("fetch", (e) => {
   if (req.mode === "navigate") {
     e.respondWith((async () => {
       const cache = await caches.open(CACHE);
-      const net = fetch(req, { cache: "no-cache" }).then((res) => { cache.put("index.html", res.clone()); return res; });
+      // La página de la red solo vale si llega ENTERA y con código 200 (con el móvil recién despierto puede llegar cortada o con error).
+      // Si no, se abre la copia guardada, y la copia mala nunca se guarda.
+      const net = fetch(req, { cache: "no-cache" }).then(async (res) => {
+        if (!(await pageOk(res))) throw new Error("página incompleta");
+        cache.put("index.html", res.clone());
+        return res;
+      });
       const cached = await cache.match("index.html");
-      if (!cached) return net;
+      if (!cached) return net.catch(() => fetch(req));
       e.waitUntil(net.catch(() => {}));
       return Promise.race([net.catch(() => cached), new Promise((r) => setTimeout(() => r(cached), 1800))]);
     })());
