@@ -1,6 +1,6 @@
 {
   "esquema": 3,
-  "version": "1.2.1",
+  "version": "1.3.0",
   "menu": { "id": "lectura", "titulo": "Lectura a primera vista", "descripcion": "Entrena la lectura de partituras de piano por intervalos y con las dos manos, de lo cercano a lo amplio. Requiere un teclado MIDI." },
   "cursos": [
     { "id": "sr1", "archivo": "sr1-notas-cercanas.json", "nivel": 1, "etiqueta": "Nivel inicial", "titulo": "Notas cercanas", "subtitulo": "Segundas y primeras terceras", "etapas": 5, "via": "A" },
@@ -8,11 +8,12 @@
     { "id": "sr3", "archivo": "sr3-saltos-amplios.json", "nivel": 3, "etiqueta": "Nivel 3", "titulo": "Saltos amplios", "subtitulo": "Sextas, séptimas y octavas", "etapas": 6, "via": "A" },
     { "id": "d1", "via": "B", "archivo": "d1-posicion-fija.json", "nivel": 1, "etiqueta": "Dos manos · Nivel 1", "titulo": "Manos juntas en posición fija", "subtitulo": "Una mano fija, paralelo, contrario y libre", "etapas": 5 },
     { "id": "d2", "via": "B", "archivo": "d2-mas-intervalos.json", "nivel": 2, "etiqueta": "Dos manos · Nivel 2", "titulo": "Más material por mano", "subtitulo": "Terceras primero en una mano y después en las dos", "etapas": 5 },
-    { "id": "d3", "via": "B", "archivo": "d3-cambios-de-posicion.json", "nivel": 3, "etiqueta": "Dos manos · Nivel 3", "titulo": "Cambios de posición", "subtitulo": "Primero una mano, después las dos, hasta la octava", "etapas": 5 }
+    { "id": "d3", "via": "B", "archivo": "d3-cambios-de-posicion.json", "nivel": 3, "etiqueta": "Dos manos · Nivel 3", "titulo": "Cambios de posición", "subtitulo": "Primero una mano, después las dos, hasta la octava", "etapas": 5 },
+    { "id": "sr5", "via": "C", "archivo": "sr5-ritmo.json", "nivel": 4, "etiqueta": "Módulo de ritmo", "titulo": "Negras y blancas", "subtitulo": "Valores y pulso con metrónomo", "etapas": 3 }
   ],
   "modulosPlanificados": [
-    { "id": "sr4", "titulo": "Pulso y continuidad", "dimension": "continuidad", "estado": "planificado", "descripcion": "Modo con pulso: la partida avanza sola y un fallo no la detiene. Repite contenido fácil de los niveles anteriores." },
-    { "id": "sr5", "titulo": "Ritmo", "dimension": "ritmo", "estado": "planificado", "descripcion": "Valores y compases por etapas, con metrónomo." },
+    { "id": "sr4", "titulo": "Pulso y continuidad", "dimension": "continuidad", "estado": "hecho", "descripcion": "Modo con pulso: la partida avanza sola y un fallo no la detiene. Se activa con el interruptor Metrónomo en Lectura (Ajustes)." },
+    { "id": "sr5", "titulo": "Ritmo", "dimension": "ritmo", "estado": "en curso: etapas 5.1 a 5.3 (negras y blancas); faltan redondas, silencios, corcheas y 3/4", "descripcion": "Valores y compases por etapas, con metrónomo." },
     { "id": "sr6", "titulo": "Dirección y patrones", "dimension": "direccion y patrones", "estado": "planificado", "descripcion": "Cambios de dirección y motivos repetidos como andamiaje." },
     { "id": "d4", "titulo": "Dos manos avanzado", "via": "B", "dimension": "intervalos, ritmo", "estado": "planificado", "descripcion": "Cuartas y quintas por mano, acordes de dos notas y ritmo distinto en cada mano. Después del módulo de ritmo." }
   ],
@@ -53,13 +54,13 @@
     },
     "ritmo": {
       "nombre": "Ritmo",
-      "estado": "planificada",
+      "estado": "activa",
       "pregunta": "¿Qué valores y compases aparecen?",
       "niveles": ["Sin ritmo: notas iguales (nivel actual)", "Negras y blancas", "Redondas y silencio de negra", "Corcheas por pares"]
     },
     "continuidad": {
       "nombre": "Continuidad y velocidad",
-      "estado": "planificada",
+      "estado": "activa",
       "pregunta": "¿Hay que mantener el pulso sin parar?",
       "niveles": ["Libre: la partida espera (nivel actual)", "Con pulso lento: avanza sola y un fallo no la detiene", "Pulso medio", "Pulso rápido"]
     }
@@ -114,6 +115,14 @@
       "descripcion": "Las dos manos a la vez, nota contra nota.",
       "cursos": ["d1", "d2", "d3"],
       "requiere": ["midi", "horizontal"],
+      "desbloqueo": { "curso": "sr1", "etapa": "sr1.5", "texto": "Se abre al superar el Nivel inicial de la vía A." }
+    },
+    {
+      "id": "C",
+      "titulo": "Ritmo",
+      "descripcion": "Valores rítmicos con metrónomo, con notas fáciles de una mano.",
+      "cursos": ["sr5"],
+      "requiere": ["midi"],
       "desbloqueo": { "curso": "sr1", "etapa": "sr1.5", "texto": "Se abre al superar el Nivel inicial de la vía A." }
     }
   ],

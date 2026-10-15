@@ -1,0 +1,279 @@
+{
+  "esquema": 3,
+  "curso": {
+    "id": "sr5",
+    "nivel": 4,
+    "etiqueta": "Módulo de ritmo",
+    "titulo": "Negras y blancas",
+    "subtitulo": "Valores y pulso con metrónomo",
+    "descripcion": "Aprendes a leer la duración de las notas con notas fáciles (posición fija, segundas y repeticiones), para que lo único nuevo sea el ritmo. Siempre con metrónomo: si pierdes una nota, la lectura sigue sin esperarte.",
+    "intervaloEstrella": "Segunda",
+    "rango": "5 notas",
+    "via": "C"
+  },
+  "defectos": {
+    "longitud": 32,
+    "armadura": 0,
+    "ritmo": null,
+    "final": "tonica",
+    "maxRepeticiones": 2,
+    "adaptativa": {
+      "activa": true,
+      "maxDesvio": 15
+    },
+    "pasa": {
+      "precision": 0.9,
+      "sesiones": 2
+    },
+    "altura": "obligatoria",
+    "entrada": {
+      "requiere": [
+        "midi"
+      ],
+      "octava": "exacta"
+    }
+  },
+  "etapas": [
+    {
+      "id": "sr5.1",
+      "orden": 1,
+      "titulo": "Sol: negras y blancas",
+      "resumen": "Mano derecha. La negra dura un pulso y la blanca dos.",
+      "foco": "Negras y blancas",
+      "cambia": "Ritmo: negras y blancas (nivel 1), con metrónomo.",
+      "clave": "sol",
+      "consejo": "Cuenta con el metrónomo: la negra se toca en su pulso y la blanca ocupa dos pulsos, así que la siguiente nota llega dos pulsos después.",
+      "registro": {
+        "sol": {
+          "min": 0,
+          "max": 4
+        }
+      },
+      "posicion": {
+        "tipo": "fija",
+        "anchura": 5,
+        "inicios": {
+          "sol": [
+            0
+          ]
+        }
+      },
+      "anclas": {
+        "sol": [
+          0,
+          4
+        ]
+      },
+      "intervalos": {
+        "0": 20,
+        "1": 80
+      },
+      "estrella": [
+        1
+      ],
+      "perfil": {
+        "intervalos": 0,
+        "registro": 0,
+        "direccion": 0,
+        "patrones": 0,
+        "manos": 0,
+        "ritmo": 1,
+        "continuidad": 1
+      },
+      "maxMismaDireccion": 4,
+      "recuperarSalto": null,
+      "maxSaltosSeguidos": null,
+      "lineas": {
+        "sol": 1,
+        "fa": 0
+      },
+      "armadura": 0,
+      "cuotaEstrella": 80,
+      "indiceDificultad": 2,
+      "notaMin": {
+        "sol": "Do4"
+      },
+      "notaMax": {
+        "sol": "Sol4"
+      },
+      "cuotaSimulada": 79.7,
+      "longitud": 24,
+      "ritmo": {
+        "compas": "4/4",
+        "valores": {
+          "1": 65,
+          "2": 35
+        },
+        "bpm": 50
+      }
+    },
+    {
+      "id": "sr5.2",
+      "orden": 2,
+      "titulo": "Fa: negras y blancas",
+      "resumen": "Mano izquierda. Los mismos valores, en clave de fa.",
+      "foco": "Negras y blancas",
+      "cambia": "Ritmo: negras y blancas (nivel 1), con metrónomo.",
+      "lateral": true,
+      "clave": "fa",
+      "consejo": "Igual que en Sol: toca cada nota en su pulso. Si pierdes una, sigue con la siguiente sin parar.",
+      "registro": {
+        "fa": {
+          "min": -4,
+          "max": 0
+        }
+      },
+      "posicion": {
+        "tipo": "fija",
+        "anchura": 5,
+        "inicios": {
+          "fa": [
+            -4
+          ]
+        }
+      },
+      "anclas": {
+        "fa": [
+          -4,
+          0
+        ]
+      },
+      "intervalos": {
+        "0": 20,
+        "1": 80
+      },
+      "estrella": [
+        1
+      ],
+      "perfil": {
+        "intervalos": 0,
+        "registro": 0,
+        "direccion": 0,
+        "patrones": 0,
+        "manos": 0,
+        "ritmo": 1,
+        "continuidad": 1
+      },
+      "maxMismaDireccion": 4,
+      "recuperarSalto": null,
+      "maxSaltosSeguidos": null,
+      "lineas": {
+        "sol": 0,
+        "fa": 1
+      },
+      "armadura": 0,
+      "cuotaEstrella": 80,
+      "indiceDificultad": 2,
+      "notaMin": {
+        "fa": "Fa3"
+      },
+      "notaMax": {
+        "fa": "Do4"
+      },
+      "cuotaSimulada": 80.1,
+      "longitud": 24,
+      "ritmo": {
+        "compas": "4/4",
+        "valores": {
+          "1": 65,
+          "2": 35
+        },
+        "bpm": 50
+      }
+    },
+    {
+      "id": "sr5.3",
+      "orden": 3,
+      "titulo": "Ambas claves con ritmo",
+      "resumen": "Alterna Sol y Fa con negras y blancas.",
+      "foco": "Negras y blancas",
+      "cambia": "Ritmo: negras y blancas (nivel 1), con metrónomo.",
+      "clave": "mixta",
+      "tramos": [
+        3,
+        6
+      ],
+      "consejo": "Mantén el pulso al cambiar de clave: la nota nueva llega en su pulso aunque cambie la mano.",
+      "registro": {
+        "sol": {
+          "min": 0,
+          "max": 4
+        },
+        "fa": {
+          "min": -4,
+          "max": 0
+        }
+      },
+      "posicion": {
+        "tipo": "fija",
+        "anchura": 5,
+        "inicios": {
+          "sol": [
+            0
+          ],
+          "fa": [
+            -4
+          ]
+        }
+      },
+      "cambioDeClave": {
+        "modo": "puente",
+        "nota": 0
+      },
+      "anclas": {
+        "sol": [
+          0,
+          4
+        ],
+        "fa": [
+          -4,
+          0
+        ]
+      },
+      "intervalos": {
+        "0": 20,
+        "1": 80
+      },
+      "estrella": [
+        1
+      ],
+      "perfil": {
+        "intervalos": 0,
+        "registro": 0,
+        "direccion": 0,
+        "patrones": 0,
+        "manos": 1,
+        "ritmo": 1,
+        "continuidad": 1
+      },
+      "maxMismaDireccion": 4,
+      "recuperarSalto": null,
+      "maxSaltosSeguidos": null,
+      "lineas": {
+        "sol": 1,
+        "fa": 1
+      },
+      "armadura": 0,
+      "cuotaEstrella": 80,
+      "indiceDificultad": 3,
+      "notaMin": {
+        "sol": "Do4",
+        "fa": "Fa3"
+      },
+      "notaMax": {
+        "sol": "Sol4",
+        "fa": "Do4"
+      },
+      "cuotaSimulada": 80.0,
+      "longitud": 24,
+      "ritmo": {
+        "compas": "4/4",
+        "valores": {
+          "1": 65,
+          "2": 35
+        },
+        "bpm": 50
+      }
+    }
+  ]
+}
