@@ -72,7 +72,7 @@ const BOTTOM_SOL = 2, BOTTOM_FA = -10;
 const PENDING = 12;
 const MAX_W   = 1100;
 // ---------- constantes nuevas ----------
-const APP_NAME = "ReadNotes Lectura", APP_VER = "0.1.7", SESSION_N = 32, CLEF_GAP = 0.55;
+const APP_NAME = "ReadNotes Lectura", APP_VER = "0.1.8", SESSION_N = 32, CLEF_GAP = 0.55;
 const DEV = /[?&]dev=1\b/.test(location.search);       // ?dev=1: permite probar sin piano (rueda y teclado en pantalla)
 const SHARED = "";   // sound/ y fonts/ están en la raíz del repositorio (en minúscula)
 const MODE_NAME = ["Clave de sol", "Clave de fa", "Claves mezcladas", "Armaduras clave de sol", "Armaduras clave de fa", "Melodías", "Lectura"];
@@ -474,6 +474,7 @@ if (S.haptic && navigator.vibrate) { try { navigator.vibrate(pattern); } catch (
 }
 let notes = [];
 let score = 0, streak = 0, okCount = 0, badCount = 0, missCount = 0;
+let wipeConf = 0;                                    // confirmación (3 s) del botón Borrar todos los datos
 let pulse = null;                                   // metrónomo de Lectura: { P: ms por pulso, t0: instante del pulso de la 1.ª nota, sched: próximo clic a programar }
 const PULSE_BPM = [0, 40, 50, 60, 70, 80, 90, 100];     // 0 = apagado
 let lastKey = -999, plan = [], generated = 0, bestStreak = 0, results = [];
@@ -866,6 +867,15 @@ function act0(id) {
     case "lay_l": S.layoutL = S.layoutL === 1 ? 0 : 1;  layout(); break;
     case "oct_on":  S.octVerify = true;   layout(); break;
     case "oct_off": S.octVerify = false;  layout(); break;
+    case "wipe_all":
+      if (wipeConf > performance.now()) {                                    // segunda pulsación: se borra el progreso de todos los cursos y las estadísticas
+        wipeConf = 0;
+        ["rnl_sessions", "rnl_prog", "rnl_prog_1", "rnl_prog_2"].forEach((k) => { try { localStorage.removeItem(k); } catch (e) {} });
+        sessions = [];  lecProg = {};  lecOpen = {};  lecConfirm = { id: "", t: 0 };
+        computeStats();
+        if (scene === "lecnivel" || scene === "lecficha" || scene === "dm" || scene === "dmres" || scene === "midichk") go("lec");
+      } else { wipeConf = performance.now() + 3000;  setTimeout(() => { dirty = true; }, 3100); }
+      break;
     case "pulse_n": S.pulse = PULSE_BPM[(PULSE_BPM.indexOf(S.pulse) + 1) % PULSE_BPM.length];  break;
     case "hand_n": S.hand = (S.hand + 1) % 3;  lecLoadProg();  lecConfirm = { id: "", t: 0 };  if (scene === "lecnivel" || scene === "lecficha" || scene === "dm" || scene === "dmres" || scene === "midichk") go("lec");  break;
     case "adapt_on":  S.adapt = true;  break;
@@ -936,6 +946,9 @@ rows.push({ k: "tap", label: "Mano en los cursos", value: S.hand === 1 ? "Solo m
 rows.push({ k: "note", tight: true, small: true, label: "El progreso de cada modo se guarda por separado" });
 rows.push({ k: "tap", label: "Metrónomo en Lectura", value: S.pulse ? S.pulse + " pulsos por minuto" : "Apagado", id: "pulse_n" });
 rows.push({ k: "note", tight: true, small: true, label: "Una nota por pulso: si no llegas a tiempo, la lectura sigue sin esperarte" });
+rows.push({ k: "hd", label: "Datos" });
+rows.push({ k: "tap", label: "Borrar todos los datos", value: wipeConf > performance.now() ? "¿Seguro? Pulsa otra vez" : "Reinicia cursos y estadísticas", id: "wipe_all" });
+rows.push({ k: "note", tight: true, small: true, label: "Borra el progreso de los cursos y las estadísticas; los ajustes se conservan" });
 rows.push({ k: "hd", label: "Apariencia" });
 rows.push({ k: "tap", label: "Tema de la aplicación", value: S.skin === 1 ? "Oscuro" : "Claro", id: S.skin === 1 ? "skin_0" : "skin_1" });
 rows.push({ k: "colors", label: "Color de Acento" });
@@ -3067,10 +3080,10 @@ const lecFirstVia = (v) => (lec.index && lec.index.cursos.find((c) => c.via === 
 const lecDone = (id) => !!(lecProg[id] && lecProg[id].done);
 function lecUnlocked(i, order) {
   const c0 = order[i].course.curso;
-  for (const v of ["B", "C"]) {                                   // las vías B (dos manos) y C (ritmo) se abren al superar la etapa que indica index.json (sr1.5)
+  for (const v of ["B", "C"]) {                                   // las vías B (dos manos) y C (ritmo) se abren al superar la etapa que indica index.json (sr1.10)
     const fv = lecFirstVia(v);
     if (fv && c0.id === fv.id && order[i].stage.orden === 1) {
-      const vd = lecViaDef(v), need = (vd && vd.desbloqueo && vd.desbloqueo.etapa) || "sr1.5";
+      const vd = lecViaDef(v), need = (vd && vd.desbloqueo && vd.desbloqueo.etapa) || "sr1.10";
       return lecDone(need) || !!lecOpen[c0.id];
     }
   }

@@ -1,0 +1,150 @@
+{
+  "esquema": 3,
+  "version": "1.4.0",
+  "menu": { "id": "lectura", "titulo": "Lectura a primera vista", "descripcion": "Entrena la lectura de partituras de piano por intervalos y con las dos manos, de lo cercano a lo amplio. Requiere un teclado MIDI." },
+  "cursos": [
+    { "id": "sr1", "archivo": "sr1-notas-cercanas.json", "nivel": 1, "etiqueta": "Nivel inicial", "titulo": "Notas cercanas", "subtitulo": "Segundas, terceras y primeros cambios de posición", "etapas": 10, "via": "A" },
+    { "id": "sr2", "archivo": "sr2-saltos-moderados.json", "nivel": 2, "etiqueta": "Nivel 2", "titulo": "Saltos moderados", "subtitulo": "Terceras, cuartas y quintas", "etapas": 5, "via": "A" },
+    { "id": "sr3", "archivo": "sr3-saltos-amplios.json", "nivel": 3, "etiqueta": "Nivel 3", "titulo": "Saltos amplios", "subtitulo": "Sextas, séptimas y octavas", "etapas": 6, "via": "A" },
+    { "id": "d1", "via": "B", "archivo": "d1-posicion-fija.json", "nivel": 1, "etiqueta": "Dos manos · Nivel 1", "titulo": "Manos juntas en posición fija", "subtitulo": "Una mano fija, paralelo, contrario y libre", "etapas": 5 },
+    { "id": "d2", "via": "B", "archivo": "d2-mas-intervalos.json", "nivel": 2, "etiqueta": "Dos manos · Nivel 2", "titulo": "Más material por mano", "subtitulo": "Terceras primero en una mano y después en las dos", "etapas": 5 },
+    { "id": "d3", "via": "B", "archivo": "d3-cambios-de-posicion.json", "nivel": 3, "etiqueta": "Dos manos · Nivel 3", "titulo": "Cambios de posición", "subtitulo": "Primero una mano, después las dos, hasta la octava", "etapas": 5 },
+    { "id": "sr5", "via": "C", "archivo": "sr5-ritmo.json", "nivel": 4, "etiqueta": "Módulo de ritmo", "titulo": "Negras y blancas", "subtitulo": "Valores y pulso con metrónomo", "etapas": 3 }
+  ],
+  "modulosPlanificados": [
+    { "id": "sr4", "titulo": "Pulso y continuidad", "dimension": "continuidad", "estado": "hecho", "descripcion": "Modo con pulso: la partida avanza sola y un fallo no la detiene. Se activa con el interruptor Metrónomo en Lectura (Ajustes)." },
+    { "id": "sr5", "titulo": "Ritmo", "dimension": "ritmo", "estado": "en curso: etapas 5.1 a 5.3 (negras y blancas); faltan redondas, silencios, corcheas y 3/4", "descripcion": "Valores y compases por etapas, con metrónomo." },
+    { "id": "sr6", "titulo": "Dirección y patrones", "dimension": "direccion y patrones", "estado": "planificado", "descripcion": "Cambios de dirección y motivos repetidos como andamiaje." },
+    { "id": "d4", "titulo": "Dos manos avanzado", "via": "B", "dimension": "intervalos, ritmo", "estado": "planificado", "descripcion": "Cuartas y quintas por mano, acordes de dos notas y ritmo distinto en cada mano. Después del módulo de ritmo." }
+  ],
+  "reglaDeDiseno": "Cada etapa cambia una sola dimensión del perfil de dificultad, y solo un nivel. Las variantes laterales (por ejemplo, Sol y Fa) no cambian ninguna.",
+  "dimensiones": {
+    "intervalos": {
+      "nombre": "Intervalos",
+      "estado": "activa",
+      "pregunta": "¿Qué distancias entre notas aparecen?",
+      "niveles": ["Repeticiones y segundas", "+ terceras (30 %)", "Terceras dominantes (60 %)", "+ cuartas y quintas", "Mezcla de segundas a quintas", "+ sextas y octavas", "+ séptimas", "Mezcla de segundas a octavas"],
+      "nota": "En «Dos manos a la vez» el nivel se mide por mano (derecha, izquierda)."
+    },
+    "registro": {
+      "nombre": "Registro",
+      "estado": "activa",
+      "pregunta": "¿Cuánto pentagrama hay que dominar a la vez?",
+      "niveles": ["5 notas fijas", "6 notas, ventana móvil", "Octava fija", "10 notas, ventana móvil (12 en total)", "Registro completo sin líneas adicionales", "Con dos líneas adicionales"],
+      "nota": "En «Dos manos a la vez» el nivel se mide por mano (derecha, izquierda). Dentro del nivel 1 el tránsito es gradual: seis notas fijas (1.5 y 1.6), un cambio de posición (1.7 y 1.8) y tres posiciones (1.9 y 1.10), siempre en una sola clave."
+    },
+    "manos": {
+      "nombre": "Coordinación de manos",
+      "estado": "activa",
+      "pregunta": "¿Cómo se reparte la lectura entre las manos?",
+      "niveles": ["Una mano (una clave)", "Alterna manos pasando por el Do central", "Alterna manos con saltos entre registros", "Dos manos, una de ellas fija", "Dos manos en movimiento paralelo", "Dos manos en movimiento contrario", "Dos manos libres e independientes"],
+      "nota": "Los niveles 0 a 2 son de «Lectura por intervalos». Los niveles 3 a 6 son de «Dos manos a la vez»."
+    },
+    "direccion": {
+      "nombre": "Dirección melódica",
+      "estado": "planificada",
+      "pregunta": "¿Cuántas veces cambia el sentido de la melodía?",
+      "niveles": ["Rachas largas en un sentido (nivel actual)", "Cambios frecuentes de dirección", "Saltos que no se recuperan por grado conjunto"]
+    },
+    "patrones": {
+      "nombre": "Patrones repetidos",
+      "estado": "planificada",
+      "pregunta": "¿Cuánto material familiar o repetido hay?",
+      "niveles": ["Sin control de patrones (aleatorio, nivel actual)", "Motivos que se repiten y se transportan", "Escalas, arpegios y fórmulas comunes"]
+    },
+    "ritmo": {
+      "nombre": "Ritmo",
+      "estado": "activa",
+      "pregunta": "¿Qué valores y compases aparecen?",
+      "niveles": ["Sin ritmo: notas iguales (nivel actual)", "Negras y blancas", "Redondas y silencio de negra", "Corcheas por pares"]
+    },
+    "continuidad": {
+      "nombre": "Continuidad y velocidad",
+      "estado": "activa",
+      "pregunta": "¿Hay que mantener el pulso sin parar?",
+      "niveles": ["Libre: la partida espera (nivel actual)", "Con pulso lento: avanza sola y un fallo no la detiene", "Pulso medio", "Pulso rápido"]
+    }
+  },
+  "evaluacion": {
+    "metricas": {
+      "precision": { "estado": "activa", "definicion": "Notas acertadas a la primera dividido entre notas de la sesión." },
+      "tiempoRespuesta": { "estado": "activa", "definicion": "Mediana de milisegundos por nota, global y por intervalo." },
+      "continuidad": { "estado": "planificada", "definicion": "Con pulso: porcentaje de notas leídas en su pulso sin detenerse. En modo libre: regularidad del tiempo entre notas." },
+      "dificultad": { "estado": "activa", "definicion": "Índice de la etapa = suma de los niveles de su perfil (en «Dos manos a la vez» se suman los de ambas manos). Se guarda con cada sesión." },
+      "precisionPorMano": { "estado": "activa en «Dos manos a la vez»", "definicion": "Columnas en las que esa mano tocó su nota correcta, dividido entre columnas de la sesión." }
+    },
+    "porIntervalo": true
+  },
+  "reglas": {
+    "desbloqueoEtapa": "Se desbloquea al superar la etapa anterior: precisión >= pasa.precision en pasa.sesiones sesiones seguidas.",
+    "desbloqueoNivel": "El nivel siguiente se desbloquea al superar la última etapa del nivel anterior.",
+    "saltarNivel": { "permitido": true, "confirmacion": true, "nota": "Un botón permite abrir un nivel sin superar el anterior; el progreso se guarda igual." },
+    "repeticion": "Cualquier etapa superada puede repetirse libremente; el mejor resultado se conserva."
+  },
+  "convenciones": {
+    "paso": "Grado diatónico. 0 = Do central (Do4); +1 = siguiente nota natural hacia el agudo.",
+    "intervalos": { "0": "unísono", "1": "segunda", "2": "tercera", "3": "cuarta", "4": "quinta", "5": "sexta", "6": "séptima", "7": "octava" },
+    "pentagrama": {
+      "sol": {
+        "lineaInferior": 2,
+        "sinLineasAdicionales": { "min": 1, "max": 11 }
+      },
+      "fa": {
+        "lineaInferior": -10,
+        "sinLineasAdicionales": { "min": -11, "max": -1 }
+      },
+      "lineasAdicionales": "Con n líneas: min = lineaInferior - 1 - 2n; max = lineaInferior + 9 + 2n."
+    },
+    "altura": { "nombre": "Vale la rueda de notas (solo el nombre).", "preferida": "La rueda es válida pero MIDI, micrófono o teclado en pantalla comprueban la octava.", "obligatoria": "Se exige octava exacta: MIDI, micrófono o teclado en pantalla (sin rueda)." },
+    "cambioDeClave": { "puente": "Antes de cambiar de clave la ventana vuelve a la zona del Do central, respetando el intervalo máximo de la etapa.", "salto": "El salto entre tramos queda entre min y max grados (fuerza cambios de registro)." },
+    "entrada": "Todos los cursos exigen teclado MIDI y octava exacta (defectos.altura = obligatoria)."
+  },
+  "fases": { "actual": "A", "A": "Lectura de alturas en modo libre, una mano por pentagrama.", "A2": "Modo con pulso sin valores rítmicos: la partida avanza sola y un fallo no la detiene (módulo sr4).", "B": "Valores rítmicos y metrónomo (módulo sr5)." },
+  "vias": [
+    {
+      "id": "A",
+      "titulo": "Lectura por intervalos",
+      "descripcion": "Una mano por pentagrama, o ambas alternando.",
+      "cursos": ["sr1", "sr2", "sr3"],
+      "requiere": ["midi"],
+      "desbloqueo": "libre"
+    },
+    {
+      "id": "B",
+      "titulo": "Dos manos a la vez",
+      "descripcion": "Las dos manos a la vez, nota contra nota.",
+      "cursos": ["d1", "d2", "d3"],
+      "requiere": ["midi", "horizontal"],
+      "desbloqueo": { "curso": "sr1", "etapa": "sr1.10", "texto": "Se abre al superar el Nivel inicial de «Lectura por intervalos»." }
+    },
+    {
+      "id": "C",
+      "titulo": "Ritmo y pulso",
+      "descripcion": "Valores rítmicos con metrónomo, con notas fáciles de una mano.",
+      "cursos": ["sr5"],
+      "requiere": ["midi"],
+      "desbloqueo": { "curso": "sr1", "etapa": "sr1.10", "texto": "Se abre al superar el Nivel inicial de «Lectura por intervalos»." }
+    }
+  ],
+  "requisitos": {
+    "midi": {
+      "obligatorio": true,
+      "motivo": "El objetivo es asociar la nota escrita con la tecla, y eso exige tocar y comprobar la octava exacta.",
+      "pantallaPrevia": ["Detectar el teclado y mostrar su nombre", "Pedir un Do central para confirmar la conexión", "Si se desconecta durante la partida, pausarla y avisar"],
+      "ignorar": ["reloj MIDI (0xF8)", "sensor activo (0xFE)", "pedal y controladores", "cualquier mensaje que no sea de nota"],
+      "filtrarAlPrincipio": "Reloj y sensor activo fueron el 97 % de los mensajes del P-145 (9.747 de 10.061): se descartan antes de tocar la interfaz.",
+      "plataforma": "Android con Chrome (Web MIDI por USB).",
+      "verificado": {
+        "fecha": "2026-10-13",
+        "teclado": "Yamaha Digital Piano (P-145) por USB",
+        "navegador": "Chrome 155 en Android 10",
+        "resultado": ["Web MIDI y permiso: sí", "Do central recibido como MIDI 60: sí", "Notas pulsadas y soltadas: 157 y 157, sin notas colgadas", "Pantalla completa y bloqueo horizontal: sí"],
+        "pendiente": ["App instalada como PWA", "Pedal de resonancia", "Sonido propio de la app mientras suena el piano"]
+      }
+    },
+    "sincronia": { "ventanaMs": 120, "nota": "Las dos notas de una columna deben sonar dentro de esta ventana. Medido con el P-145: mediana 12 ms, p90 31 ms, máximo 98 ms (12 intentos)." },
+    "asignacionDeManos": "La nota más grave se asigna a la izquierda y la más aguda a la derecha. El curso no incluye cruces de manos.",
+    "orientacion": { "B": "horizontal", "nota": "Verificado: pantalla completa más bloqueo horizontal, pedido desde un toque del usuario (botón Empezar). Si falla, aviso para girar el móvil. Sin verificar con la app instalada como PWA." }
+  },
+  "interfazDosManos": { "distribucion": "Dos pautas apiladas (Sol arriba, Fa abajo), una columna por par de notas.", "columnas": "Las dos pautas comparten el mismo origen horizontal para que las notas de una columna queden alineadas.", "resaltado": "Una sola banda vertical cruza las dos pautas en la columna actual.", "zonaInferior": "Feedback por mano: qué mano falló, nota tocada y nota esperada.", "contador": "Columna n/32, fallos y precisión, global y por mano." }
+}
